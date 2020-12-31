@@ -10,10 +10,11 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 # ROS
 import rospy
-import tf2_ros
+import tf
 # ROS Image message
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
+from sensor_msgs.msg import PointCloud
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import TransformStamped
@@ -110,7 +111,7 @@ def numpy_to_image(arr, encoding):
 	return im
 
 def publish_tf_msg(simPose):
-    br = tf2_ros.TransformBroadcaster()
+    br = tf.TransformBroadcaster()
 
     t = TransformStamped()
     # populate tf ros message
@@ -124,7 +125,6 @@ def publish_tf_msg(simPose):
     t.transform.rotation.y = simPose.pose.orientation.y
     t.transform.rotation.z = simPose.pose.orientation.z
     t.transform.rotation.w = simPose.pose.orientation.w
-
     br.sendTransform(t)
 
 def convert_ned_to_enu(pos_ned, orientation_ned):
@@ -135,13 +135,13 @@ def convert_ned_to_enu(pos_ned, orientation_ned):
 					    - orientation_ned.z_val,
 					    - orientation_ned.x_val,
 					      orientation_ned.y_val)
-	return pos_enu, orientation_ned
+	return pos_enu, orientation_enu
 
 def get_sim_pose(client):
     # get state of the car
     car_state = client.getCarState()
-    pos = car_state.kinematics_estimated.position
-    orientation = car_state.kinematics_estimated.orientation
+    pos_ned = car_state.kinematics_estimated.position
+    orientation_ned = car_state.kinematics_estimated.orientation
 
     pos, orientation = convert_ned_to_enu(pos_ned, orientation_ned)
 
@@ -178,13 +178,13 @@ def get_image_messages(client):
 
     # convert scene uint8 array to NumPy 2D array using
     scene_img1d = np.fromstring(responses[0].image_data_uint8, dtype=np.uint8)         # get numpy array
-    scene_img_rgba = scene_img1d.reshape(responses[0].height, responses[0].width, 4)   # reshape array to image array H X W
+    scene_img_rgba = scene_img1d.reshape(responses[0].height, responses[0].width, 3)   # reshape array to image array H X W
 
     # convert depth float array to NumPy 2D array using
     depth_img = airsim.list_to_2d_float_array(responses[1].image_data_float, responses[1].width, responses[1].height)
 
     # Populate image message
-    rgb_msg = numpy_to_image(scene_img_rgba, "rgba8")
+    rgb_msg = numpy_to_image(scene_img_rgba, "rgb8")
     depth_msg = numpy_to_image(depth_img, "32FC1")
 
     return rgb_msg, depth_msg
@@ -236,7 +236,12 @@ def airpub():
         depth_cam_pub.publish(camera_info_msg)
         rgb_pub.publish(rgb_msg)
         depth_pub.publish(depth_msg)
-
+        
+        # log PoseStamped message
+        rospy.loginfo(simPose)
+        #publish PoseStamped message
+        pub.publish(simPose)
+        # sleeps until next cycle
         rate.sleep()
 
 if __name__ == '__main__':
