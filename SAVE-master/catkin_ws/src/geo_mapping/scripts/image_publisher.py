@@ -10,11 +10,10 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 # ROS
 import rospy
-import tf
+import tf2_ros
 # ROS Image message
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
-from sensor_msgs.msg import PointCloud
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import TransformStamped
@@ -111,7 +110,7 @@ def numpy_to_image(arr, encoding):
 	return im
 
 def publish_tf_msg(simPose):
-    br = tf.TransformBroadcaster()
+    br = tf2_ros.TransformBroadcaster()
 
     t = TransformStamped()
     # populate tf ros message
@@ -125,7 +124,33 @@ def publish_tf_msg(simPose):
     t.transform.rotation.y = simPose.pose.orientation.y
     t.transform.rotation.z = simPose.pose.orientation.z
     t.transform.rotation.w = simPose.pose.orientation.w
+
     br.sendTransform(t)
+
+def get_camera_params():
+    # read parameters
+    width = rospy.get_param('~width', 640)
+    height = rospy.get_param('~height', 360)
+    Fx = rospy.get_param('~Fx', 320)
+    Fy = rospy.get_param('~Fy', 320)
+    Cx = rospy.get_param('~Cx', 320)
+    Cy = rospy.get_param('~Cy', 180)
+
+    # create sensor message
+    camera_info_msg = CameraInfo()
+    camera_info_msg.distortion_model = 'plumb_bob'
+    camera_info_msg.width = width
+    camera_info_msg.height = height
+    camera_info_msg.K = [Fx, 0, Cx,
+                         0, Fy, Cy,
+                         0, 0, 1]
+    camera_info_msg.D = [0, 0, 0, 0]
+
+    camera_info_msg.P = [Fx, 0, Cx, 0,
+                         0, Fy, Cy, 0,
+                         0, 0, 1, 0]
+    camera_info_msg.header.frame_id = "front_center_optical"
+    return camera_info_msg
 
 def convert_ned_to_enu(pos_ned, orientation_ned):
 	pos_enu = airsim.Vector3r(  pos_ned.x_val,
@@ -172,19 +197,19 @@ def convert_posestamped_to_odom_msg(simPose):
 def get_image_messages(client):
     # get camera images from the car
     responses = client.simGetImages([
-       airsim.ImageRequest("0", airsim.ImageType.Scene, False, False),
+       airsim.ImageRequest("1", airsim.ImageType.Scene, False, False),
        airsim.ImageRequest("0", airsim.ImageType.DepthPlanner, True)
     ])
 
     # convert scene uint8 array to NumPy 2D array using
     scene_img1d = np.fromstring(responses[0].image_data_uint8, dtype=np.uint8)         # get numpy array
-    scene_img_rgba = scene_img1d.reshape(responses[0].height, responses[0].width, 3)   # reshape array to image array H X W
+    scene_img_rgb = scene_img1d.reshape(responses[0].height, responses[0].width, 3)   # reshape array to image array H X W
 
     # convert depth float array to NumPy 2D array using
     depth_img = airsim.list_to_2d_float_array(responses[1].image_data_float, responses[1].width, responses[1].height)
 
     # Populate image message
-    rgb_msg = numpy_to_image(scene_img_rgba, "rgb8")
+    rgb_msg = numpy_to_image(scene_img_rgb, "rgb8")
     depth_msg = numpy_to_image(depth_img, "32FC1")
 
     return rgb_msg, depth_msg
@@ -192,8 +217,7 @@ def get_image_messages(client):
 def airpub():
     ## Start ROS ---------------------------------------------------------------
     rospy.init_node('geo_mapping', anonymous=False)
-    loop_rate = rospy.get_param('~loop_rate', 10)
-    rate = rospy.Rate(loop_rate)
+    rate = rospy.Rate(10)
 
     ## Publishers --------------------------------------------------------------
     # image publishers
@@ -217,6 +241,7 @@ def airpub():
 
     while not rospy.is_shutdown():
 
+        camera_info_msg = get_camera_params()
         simPose = get_sim_pose(client)
         odom_msg = convert_posestamped_to_odom_msg(simPose)
         rgb_msg, depth_msg = get_image_messages(client)
@@ -239,8 +264,6 @@ def airpub():
         
         # log PoseStamped message
         rospy.loginfo(simPose)
-        #publish PoseStamped message
-        pub.publish(simPose)
         # sleeps until next cycle
         rate.sleep()
 

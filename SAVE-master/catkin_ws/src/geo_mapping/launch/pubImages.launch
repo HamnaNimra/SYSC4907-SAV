@@ -1,9 +1,9 @@
 <launch>
 
-  <!-- publish tf using urdf  -->
-  <include file="$(find airsim_ros_client)/launch/utils/publish_tf.launch"/>
+  <!-- publish tf  -->
+  <include file="$(find geo_mapping)/launch/utils/publish_tf.launch"/>
 
-  <node pkg="airsim_ros_client" type="img_publisher.py" name="airsim_img_publisher"
+  <node pkg="geo_mapping" type="img_publisher.py" name="airsim_img_publisher"
     output="screen" >
 
     <!-- RGB camera parameters (parameters when calibrated) -->
