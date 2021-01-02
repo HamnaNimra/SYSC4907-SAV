@@ -1,11 +1,8 @@
 <launch>
 
-  <!-- publish tf  -->
-  <include file="$(find geo_mapping)/launch/utils/publish_tf.launch"/>
-
   <node pkg="geo_mapping" type="img_publisher.py" name="airsim_img_publisher"
     output="screen" >
-
+	  
     <!-- RGB camera parameters (parameters when calibrated) -->
     <param name="Fx" value="320"/>
     <param name="Fy" value="320"/>
