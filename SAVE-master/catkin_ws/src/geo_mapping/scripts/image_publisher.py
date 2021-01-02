@@ -181,7 +181,7 @@ def get_sim_pose(client):
     simPose.pose.orientation.z = orientation.z_val
     #simPose.header.stamp = rospy.Time.now()
     simPose.header.seq = 1
-    simPose.header.frame_id = "simFrame"
+    simPose.header.frame_id = "world"
 
     return simPose
 
@@ -189,7 +189,7 @@ def convert_posestamped_to_odom_msg(simPose):
     # populate odom ros message
     odom_msg = Odometry()
     odom_msg.pose.pose = simPose.pose
-    odom_msg.header.frame_id = "simFrame"
+    odom_msg.header.frame_id = "world"
     odom_msg.child_frame_id = "base_link"
 
     return odom_msg
