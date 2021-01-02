@@ -1,9 +1,0 @@
-<launch>
-
-    <!-- Node to publish images from airsim client node -->
-    <include file="$(find geo_mapping)/launch/pubImages.launch"/>
-
-     <!-- Convert to colored point cloud -->
-     <include file="$(find geo_mapping)/launch/include/rgbPointCloudConverter.launch"/>
-
-</launch>
