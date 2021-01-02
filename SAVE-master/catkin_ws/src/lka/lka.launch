@@ -18,8 +18,8 @@
 		<param name="height" value="360"/>
 		<!-- Height when calibrated!-->
 	</node>
-	<node name="rviz" pkg="rviz" type="rviz"  output="log" args="-d $(find geo_mapping)/rviz/default.rviz" />	
-	<node name="airsim_colored_cloudify" pkg="nodelet" type="nodelet" output="log"
+	
+		<node name="airsim_colored_cloudify" pkg="nodelet" type="nodelet" output="log"
 	args="load depth_image_proc/point_cloud_xyzrgb airsim_depth_transforms_manager --no-bond">
 		<!-- Input: Camera calibration and metadata.  (sensor_msgs/CameraInfo) -->
 		<remap from="rgb/camera_info" to="/airsim/camera_info"/>
@@ -30,5 +30,32 @@
 		<!-- Output: Point Cloud -->
 		<remap from="depth_registered/points" to="/airsim/points/colored"/>
 	</node>
+	
+	<node name="slam_gmapping" pkg="gmapping" type="slam_gmapping">
+		<param name="resolution" value="0.075" />
+
+		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+		<param name="frame_id" type="string" value="world" />
+		<param name="base_frame_id" value="front_center_optical" />
+
+		<!-- maximum range to integrate (speedup!) -->
+		<param name="sensor_model/max_range" value="100" />
+
+		<!-- data source to integrate (PointCloud2) -->
+		<remap from="cloud_in" to="/airsim/points" />
+
+		<!-- maximum range to integrate (speedup!) -->
+		<!--<param name="pointcloud_min_z" value="-5.0" />
+		<param name="pointcloud_max_z" value="50.0" />-->
+        <param name="pointcloud_max_x" value="200.0" />
+        <param name="pointcloud_min_x" value="-200.0" />
+		<param name="filter_ground" value="false" />
+		<param name="sensor_model/min" value="0.05" />
+		<param name="sensor_model/max" value="100" />
+		<param name="latch" value="false" />
+
+	</node>
+	<node name="rviz" pkg="rviz" type="rviz"  output="log" args="-d $(find geo_mapping)/rviz/default.rviz" />	
+
 	
 </launch>
