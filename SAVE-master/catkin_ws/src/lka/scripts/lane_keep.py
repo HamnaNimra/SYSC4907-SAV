@@ -54,7 +54,6 @@ class LaneKeepAssist:
                 cv_img = bridge.imgmsg_to_cv2(img, desired_encoding="passthrough")
 
                 result = lane_detect.lane_detect(cv_img, (height, width))
-
                 if result != None:
                     left_line, right_line = result
                     # rospy.loginfo(result)
@@ -89,9 +88,6 @@ class LaneKeepAssist:
 
                         self.construct_lane_msg(lanes_msg.lane_lines[0], left_line)
 
-                    elif left_line == [] and right_line == []: # There are no left and right lane lines
-                        margin_steer = -0.8
-
                     # Calculate x-intersection and steering correction to center x-intersection steering correction
                     if x_intersection != None:
                         x_steering = (x_intersection / (width / 2)) - 1
@@ -105,7 +101,7 @@ class LaneKeepAssist:
                     self.steering = (current_to_prev * x_steering) + ((1-current_to_prev) * self.steering)
 
                     rospy.loginfo(self.steering)
-                    
+
                     self.steeringPub.publish(self.steering)
                     self.lanePub.publish(lanes_msg)
                 else: # An error
