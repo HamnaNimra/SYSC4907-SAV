@@ -20,7 +20,14 @@ class DistanceTest:
     def parse_lidarData(self, data):
         points = numpy.array(data.point_cloud, dtype=numpy.dtype('f4'))
         points = numpy.reshape(points, (int(points.shape[0]/3), 3))
-
+        print "____________ "
+        x =[]
+        for i in points:
+             x.append(i[0])
+        avg = sum(x) / len (x)
+        print avg
+        if avg < 12:
+            print "BRAKE"
         return points
 
     def execute(self):
@@ -40,20 +47,16 @@ class DistanceTest:
         for i in range(1,3):
             lidarData = self.client.getLidarData();
             if (len(lidarData.point_cloud) < 3):
-                print("\tNo points received from Lidar data")
+                #print("\tNo points received from Lidar data")
+                print('')
             else:
                 points = self.parse_lidarData(lidarData)
-                print("DATA")
-                print("\tReading %d: time_stamp: %d number_of_points: %d" % (i, lidarData.time_stamp, len(points)))
-                print("\t\tlidar position: %s" % (pprint.pformat(lidarData.pose.position)))
-                print("\t\tlidar orientation: %s" % (pprint.pformat(lidarData.pose.orientation)))
+                #print("\tReading %d: time_stamp: %d number_of_points: %d" % (i, lidarData.time_stamp, len(points)))
+                #print("\t\tlidar position: %s" % (pprint.pformat(lidarData.pose.position)))
+                #print("\t\tlidar orientation: %s" % (pprint.pformat(lidarData.pose.orientation)))
 
-                f = open("points.csv", "w")
-                f.write(lidarData.pose.position)
-                f.write(lidarData.pose.orientation)
-                f.close()
 
-                time.sleep(5)
+                time.sleep(2)
 
 
 
