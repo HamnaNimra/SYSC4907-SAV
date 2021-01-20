@@ -31,3 +31,5 @@ def controlListener():
 
 if __name__ == '__main__':
     controlListener()
+    print("DONE")
+    rospy.loginfo("RUNNING")

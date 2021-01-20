@@ -1,61 +1,9 @@
 <launch>
-	<node name="raw_image" pkg="sensors" type="car_image_raw.py" />
-	<node name="speed" pkg="sensors" type="speedometer.py" />
-	<node name="controls" pkg="controls" type="handle_controls.py" />
-	<node name="lka" pkg="lka" type="lane_keep.py" />
-	<node name="acc" pkg="acc" type="acc.py" />
-	<node name="metrics" pkg="metrics" type="main.py" />
-	<node name="agent" pkg="agent" type="reactive_agent.py"/>
-	<node name="object_detect" pkg="object_detect" type="object_detect.py"/>
-	<node name="geo_mapping" pkg="geo_mapping" type="image_publisher.py" output="log" >
-		<!-- RGB camera parameters (parameters when calibrated) -->
-		<param name="Fx" value="320"/>
-		<param name="Fy" value="320"/>
-		<param name="cx" value="320"/>
-		<param name="cy" value="180"/>
-		<param name="width" value="640"/>
-		<!-- Width when calibrated!-->
-		<param name="height" value="360"/>
-		<!-- Height when calibrated!-->
-	</node>
-	
-		<node name="airsim_colored_cloudify" pkg="nodelet" type="nodelet" output="log"
-	args="load depth_image_proc/point_cloud_xyzrgb airsim_depth_transforms_manager --no-bond">
-		<!-- Input: Camera calibration and metadata.  (sensor_msgs/CameraInfo) -->
-		<remap from="rgb/camera_info" to="/airsim/camera_info"/>
-		<!-- Input: Rectified rgb image -->
-		<remap from="rgb/image_rect_color" to="/airsim/rgb/image_raw"/>
-		<!-- Input: Rectified depth image -->
-		<remap from="depth_registered/image_rect" to="/airsim/depth"/>
-		<!-- Output: Point Cloud -->
-		<remap from="depth_registered/points" to="/airsim/points/colored"/>
-	</node>
-	
-	<node name="slam_gmapping" pkg="gmapping" type="slam_gmapping">
-		<param name="resolution" value="0.075" />
-
-		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-		<param name="frame_id" type="string" value="world" />
-		<param name="base_frame_id" value="front_center_optical" />
-
-		<!-- maximum range to integrate (speedup!) -->
-		<param name="sensor_model/max_range" value="100" />
-
-		<!-- data source to integrate (PointCloud2) -->
-		<remap from="cloud_in" to="/airsim/points" />
-
-		<!-- maximum range to integrate (speedup!) -->
-		<!--<param name="pointcloud_min_z" value="-5.0" />
-		<param name="pointcloud_max_z" value="50.0" />-->
-        <param name="pointcloud_max_x" value="200.0" />
-        <param name="pointcloud_min_x" value="-200.0" />
-		<param name="filter_ground" value="false" />
-		<param name="sensor_model/min" value="0.05" />
-		<param name="sensor_model/max" value="100" />
-		<param name="latch" value="false" />
-
-	</node>
-	<node name="rviz" pkg="rviz" type="rviz"  output="log" args="-d $(find geo_mapping)/rviz/default.rviz" />	
-
-	
+  <node name="agent" pkg="agent" type="reactive_agent.py"/>
+  <node name="raw_image" pkg="sensors" type="car_image_raw.py" />
+  <node name="speed" pkg="sensors" type="speedometer.py" />
+  <node name="controls" pkg="controls" type="handle_controls.py" />
+  <node name="lka" pkg="lka" type="lane_keep.py" />
+  <node name="acc" pkg="acc" type="acc.py" />
+  <node name="metrics" pkg="metrics" type="main.py" />
 </launch>
