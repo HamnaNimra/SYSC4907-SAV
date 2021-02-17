@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import cv2 as cv
 import numpy as np
-
+import pytesseract
 import rospy
+
+import re
 
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -10,10 +12,69 @@ from cv_bridge import CvBridge, CvBridgeError
 from imutils.object_detection import non_max_suppression
 import imutils 
 
+from std_msgs.msg import Float64
+
 from object_avoid import AvoidPedestrians
 
 from lka.msg import Lane
 from lka.msg import Lanes
+# CLass for Stop Sign Detection
+
+class DetectStopSign():
+
+    def __init__(self):
+        self.brakePub = rospy.Publisher('object_avoid/brake',Float64,queue_size=1)
+
+    def getImage(self, img):
+        bridge  = CvBridge()
+
+        try:
+            cv_img = bridge.imgmsg_to_cv2(img, desired_encoding="passthrough")
+        except CvBridgeError as e:
+            rospy.loginfo(e)
+        
+        return cv_img
+
+    def processImage(self, image):
+        image_grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        image_grey = cv.equalizeHist(image_grey)
+        return image_grey
+         
+    def detectAndDisplay(self, img):
+        image = self.getImage(img)
+        # resize image to improve the accuracy and decrease detection time 
+
+        # converting from BGR to HSV color space
+        img_hsv=cv.cvtColor(image, cv.COLOR_BGR2HSV)
+
+        #image = cv.Canny(img_hsv,100,200)
+        mask1 = cv.inRange(img_hsv, (0,50,20), (5,255,255))
+        mask2 = cv.inRange(img_hsv, (175,50,20), (180,255,255))
+
+        mask = cv.bitwise_or(mask1, mask2)
+        
+        # Making the Boxes around Area of Interest
+        bluecnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)[-2]
+        blue_area = max(bluecnts, key=cv.contourArea)
+        (x,y,w,h) = cv.boundingRect(blue_area)
+        cv.rectangle(image,(x,y),(x+w, y+h),(0,255,0),2)
+    
+        # Canny on region of image
+        text = image[y:y+h, x:x+w]
+        a = imutils.resize(text, width=min(85, image.shape[1]))
+        l = cv.Canny(a,100,295)
+        cv.imshow("Canny",l)
+        # For Detecting the TEXT from the stop sign
+        cv.waitKey(5)
+        text = pytesseract.image_to_string(l) 
+        rospy.loginfo(text)
+
+        if re.search('[a-zA-Z]', text):
+            rospy.loginfo(text)
+            self.brakePub.publish(1)
+
+        #cv.imshow("Text",l)
+        cv.imshow("img_hsv",image)
 
 """
 Class for pedestrian detection 
@@ -73,9 +134,21 @@ def listener():
     rospy.init_node('object_detect', anonymous=True)
     avoid_ped = AvoidPedestrians()
     detect_ped = DetectPedestrians(avoid_ped)
+    detect_stop = DetectStopSign()
     rospy.Subscriber('airsim/image_raw', Image, detect_ped.detectAndDisplay)
+    rospy.Subscriber('airsim/image_raw', Image, detect_stop.detectAndDisplay)
     rospy.Subscriber('lka/lanes', Lanes, detect_ped.avoid.get_lines)
     rospy.spin()
+
+
+    while True:
+        data_car1 = client.getDistanceSensorData(vehicle_name="Car1")
+        data_car2 = client.getDistanceSensorData(vehicle_name="Car2")
+        
+        rospy.loginfo("Distance sensor data: Car1: {data_car1.distance}, Car2: {data_car2.distance}")
+        time.sleep(1.0)
+    client = airsim.CarClient()
+    client.confirmConnection()
 
 if __name__ == "__main__":
     listener()
