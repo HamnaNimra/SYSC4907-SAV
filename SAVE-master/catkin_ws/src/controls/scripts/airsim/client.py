@@ -73,16 +73,6 @@ class VehicleClient:
             print(ver_info)
         print('')
 
-    # time-of-day control
-    def simSetTimeOfDay(self, is_enabled, start_datetime = "", is_start_datetime_dst = False, celestial_clock_speed = 1, update_interval_secs = 60, move_sun = True):
-        return self.client.call('simSetTimeOfDay', is_enabled, start_datetime, is_start_datetime_dst, celestial_clock_speed, update_interval_secs, move_sun)
-
-    # weather
-    def simEnableWeather(self, enable):
-        return self.client.call('simEnableWeather', enable)
-    def simSetWeatherParameter(self, param, val):
-        return self.client.call('simSetWeatherParameter', param, val)
-
     # camera control
     # simGetImage returns compressed png in array of bytes
     # image_type uses one of the ImageType members
@@ -117,9 +107,6 @@ class VehicleClient:
     def simSetObjectPose(self, object_name, pose, teleport = True):
         return self.client.call('simSetObjectPose', object_name, pose, teleport)
 
-    def simListSceneObjects(self, name_regex = '.*'):
-        return self.client.call('simListSceneObjects', name_regex)
-
     def simSetSegmentationObjectID(self, mesh_name, object_id, is_name_regex = False):
         return self.client.call('simSetSegmentationObjectID', mesh_name, object_id, is_name_regex)
     def simGetSegmentationObjectID(self, mesh_name):
@@ -142,28 +129,6 @@ class VehicleClient:
         env_state = self.client.call('simGetGroundTruthEnvironment', vehicle_name)
         return EnvironmentState.from_msgpack(env_state)
     simGetGroundTruthEnvironment.__annotations__ = {'return': EnvironmentState}
-
-    # sensor APIs
-    def getImuData(self, imu_name = '', vehicle_name = ''):
-        return ImuData.from_msgpack(self.client.call('getImuData', imu_name, vehicle_name))
-
-    def getBarometerData(self, barometer_name = '', vehicle_name = ''):
-        return BarometerData.from_msgpack(self.client.call('getBarometerData', barometer_name, vehicle_name))
-
-    def getMagnetometerData(self, magnetometer_name = '', vehicle_name = ''):
-        return MagnetometerData.from_msgpack(self.client.call('getMagnetometerData', magnetometer_name, vehicle_name))
-
-    def getGpsData(self, gps_name = '', vehicle_name = ''):
-        return GpsData.from_msgpack(self.client.call('getGpsData', gps_name, vehicle_name))
-
-    def getDistanceSensorData(self, lidar_name = '', vehicle_name = ''):
-        return DistanceSensorData.from_msgpack(self.client.call('getDistanceSensorData', distance_sensor_name, vehicle_name))
-
-    def getLidarData(self, lidar_name = '', vehicle_name = ''):
-        return LidarData.from_msgpack(self.client.call('getLidarData', lidar_name, vehicle_name))
-        
-    def simGetLidarSegmentation(self, lidar_name = '', vehicle_name = ''):
-        return self.client.call('simGetLidarSegmentation', lidar_name, vehicle_name)
 
     #----------- APIs to control ACharacter in scene ----------/
     def simCharSetFaceExpression(self, expression_name, value, character_name = ""):
@@ -192,16 +157,10 @@ class VehicleClient:
         self.client.call('simCharResetBonePose', bone_name, character_name)
     def simCharSetFacePreset(self, preset_name, value, character_name = ""):
         self.client.call('simCharSetFacePreset', preset_name, value, character_name)
-    def simCharSetFacePresets(self, presets, character_name = ""):
-        self.client.call('simSetFacePresets', presets, character_name)
-    def simCharSetBonePoses(self, poses, character_name = ""):
-        self.client.call('simSetBonePoses', poses, character_name)
-    def simCharGetBonePoses(self, bone_names, character_name = ""):
-        return self.client.call('simGetBonePoses', bone_names, character_name)
 
-    def cancelLastTask(self, vehicle_name = ''):
-        self.client.call('cancelLastTask', vehicle_name)
-    def waitOnLastTask(self, timeout_sec = float('nan')):
+    def cancelLastTask():
+        self.client.call('cancelLastTask')
+    def waitOnLastTask(timeout_sec = float('nan')):
         return self.client.call('waitOnLastTask', timeout_sec)
 
     # legacy handling
@@ -338,6 +297,3 @@ class CarClient(VehicleClient, object):
     def getCarState(self, vehicle_name = ''):
         state_raw = self.client.call('getCarState', vehicle_name)
         return CarState.from_msgpack(state_raw)
-    def getCarControls(self, vehicle_name=''):
-        controls_raw = self.client.call('getCarControls', vehicle_name)
-        return CarControls.from_msgpack(controls_raw)

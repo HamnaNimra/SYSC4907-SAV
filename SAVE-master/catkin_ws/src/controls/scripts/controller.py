@@ -5,6 +5,7 @@ from threading import Semaphore
 import rospy
 import airsim
 
+
 def setup():
     # Connect to the AirSim simulator and get controls object
     global carControls, controlSem, simulator
@@ -53,7 +54,6 @@ def controlListener():
     # Repeat the listener
     rospy.spin()
 
+
 if __name__ == '__main__':
     controlListener()
-    print("DONE")
-    rospy.loginfo("RUNNING")

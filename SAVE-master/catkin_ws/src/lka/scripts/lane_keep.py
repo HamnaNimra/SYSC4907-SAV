@@ -87,6 +87,8 @@ class LaneKeepAssist:
                         margin_steer = self.margin_correction(left_margin, right_margin, height, width)
 
                         self.construct_lane_msg(lanes_msg.lane_lines[0], left_line)
+                    elif left_line == [] and right_line == []: # No left or right lanes, probably an intersection
+                        x_intersection != None
 
                     # Calculate x-intersection and steering correction to center x-intersection steering correction
                     if x_intersection != None:

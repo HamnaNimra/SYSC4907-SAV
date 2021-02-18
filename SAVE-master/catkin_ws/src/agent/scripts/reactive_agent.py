@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from task import Task
 from layer import Layer
 from controls.msg import Control
