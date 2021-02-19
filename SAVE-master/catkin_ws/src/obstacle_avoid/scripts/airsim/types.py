@@ -37,6 +37,17 @@ class LandedState:
     Landed = 0
     Flying = 1
 
+class WeatherParameter:
+    Rain = 0
+    Roadwetness = 1
+    Snow = 2
+    RoadSnow = 3
+    MapleLeaf = 4
+    RoadLeaf = 5
+    Dust = 6
+    Fog = 7
+    Enabled = 8
+
 class Vector3r(MsgpackMixin):
     x_val = 0.0
     y_val = 0.0
@@ -65,7 +76,7 @@ class Vector3r(MsgpackMixin):
 
     def __mul__(self, other):
         if type(other) in [int, float] + np.sctypes['int'] + np.sctypes['uint'] + np.sctypes['float']:
-            return Vector3r(self.x_val*other, self.y_val*other, self.z_val)
+            return Vector3r(self.x_val*other, self.y_val*other, self.z_val*other)
         else: 
             raise TypeError('unsupported operand type(s) for *: %s and %s' % ( str(type(self)), str(type(other))) )
 
@@ -77,7 +88,7 @@ class Vector3r(MsgpackMixin):
 
     def cross(self, other):
         if type(self) == type(other):
-            cross_product = np.cross(self.to_numpy_array(), other.to_numpy_array)
+            cross_product = np.cross(self.to_numpy_array(), other.to_numpy_array())
             return Vector3r(cross_product[0], cross_product[1], cross_product[2])
         else:
             raise TypeError('unsupported operand type(s) for \'cross\': %s and %s' % ( str(type(self)), str(type(other))) )
@@ -143,19 +154,19 @@ class Quaternionr(MsgpackMixin):
             raise TypeError('unsupported operand type(s) for \'dot\': %s and %s' % ( str(type(self)), str(type(other))) )
 
     def cross(self, other):
-        if type(self) == typer(other):
+        if type(self) == type(other):
             return (self * other - other * self) / 2
         else:
             raise TypeError('unsupported operand type(s) for \'cross\': %s and %s' % ( str(type(self)), str(type(other))) )
 
     def outer_product(self, other):
-        if type(self) == typer(other):
+        if type(self) == type(other):
             return ( self.inverse()*other - other.inverse()*self ) / 2
         else:
             raise TypeError('unsupported operand type(s) for \'outer_product\': %s and %s' % ( str(type(self)), str(type(other))) )
 
     def rotate(self, other):
-        if type(self) == typer(other):
+        if type(self) == type(other):
             if other.get_length() == 1:
                 return other * self * other.inverse()
             else:
@@ -186,7 +197,9 @@ class Pose(MsgpackMixin):
     position = Vector3r()
     orientation = Quaternionr()
 
-    def __init__(self, position_val = Vector3r(), orientation_val = Quaternionr()):
+    def __init__(self, position_val = None, orientation_val = None):
+        position_val = position_val if position_val != None else Vector3r()
+        orientation_val = orientation_val if orientation_val != None else Quaternionr()
         self.position = position_val
         self.orientation = orientation_val
 
@@ -340,3 +353,52 @@ class CameraInfo(MsgpackMixin):
     pose = Pose()
     fov = -1
     proj_mat = ProjectionMatrix()
+
+class LidarData(MsgpackMixin):
+    point_cloud = 0.0
+    time_stamp = np.uint64(0)
+    pose = Pose()
+
+class ImuData(MsgpackMixin):
+    time_stamp = np.uint64(0)
+    orientation = Quaternionr()
+    angular_velocity = Vector3r()
+    linear_acceleration = Vector3r()
+
+class BarometerData(MsgpackMixin):
+    time_stamp = np.uint64(0)
+    altitude = Quaternionr()
+    pressure = Vector3r()
+    qnh = Vector3r()
+
+class MagnetometerData(MsgpackMixin):
+    time_stamp = np.uint64(0)
+    magnetic_field_body = Vector3r()
+    magnetic_field_covariance = 0.0
+
+class GnssFixType(MsgpackMixin):
+    GNSS_FIX_NO_FIX = 0
+    GNSS_FIX_TIME_ONLY = 1
+    GNSS_FIX_2D_FIX = 2
+    GNSS_FIX_3D_FIX = 3
+
+class GnssReport(MsgpackMixin): 
+    geo_point = GeoPoint();
+    eph = 0.0
+    epv = 0.0;
+    velocity = Vector3r();
+    fix_type = GnssFixType();
+    time_utc = np.uint64(0);
+
+class GpsData(MsgpackMixin):
+    time_stamp = np.uint64(0)
+    gnss = GnssReport()
+    is_valid = False
+
+
+class DistanceSensorData(MsgpackMixin):
+    time_stamp = np.uint64(0)
+    distance = Quaternionr()
+    min_distance = Quaternionr()
+    max_distance = Quaternionr()
+    relative_pose = Pose()

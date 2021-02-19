@@ -19,11 +19,8 @@ x = 0
 
 
 request = None
-pub = rospy.Publisher("controller/clearance",String, queue_size=10)
+pub = rospy.Publisher("controller",String, queue_size=1)
 
-def callback(data):
-    request = data
-    print("Request:",request)
 
 def getPermission(r):
     clearance_level = r
@@ -33,16 +30,17 @@ def getPermission(r):
     stopsign_detection = String("3")
     lka_module = String("2")
     geo_module = String("1")
-    reset = String("10")
+    resetOBJ = String("10")
+    resetSTOP = String("11")
 
     global x  
     if clearance_level == obstacle_detection:
         if x == 0:
             x = 1
-            print("Lock Closed")
+            print("OBSTACLE Locked")
             key = str(5)
             pub.publish(key)
-            print ("ACCESS SENT Obstacle Detection")
+            print ("Obstacle Detection")
     if clearance_level == acc_module:
         if x == 0:
             x = 1
@@ -53,10 +51,10 @@ def getPermission(r):
     if clearance_level == stopsign_detection:
         if x  == 0:
             x = 1
-            print("Lock Closed")
+            print("STOP Locked")
             key = str(3)
             pub.publish(key)
-            print ("ACCESS SENT Stop Sign Module")
+            print ("STOP Detection")
     if clearance_level == lka_module:
         if x == 0:
             x = 1
@@ -71,14 +69,26 @@ def getPermission(r):
             key = str(1)
             pub.publish(key)
             print ("ACCESS SENT GEO Module")
-    if clearance_level == reset:
+    if clearance_level == resetOBJ:
         x = 0
-        print("Lock Open")
+        #rst = str(404)
+        #pub.publish(rst)
+        print("OBJ Open")
+        #time.sleep(10)
+    if clearance_level == resetSTOP:
+        x = 0
+        #rst = str(404)
+        #pub.publish(rst)
+        print("STOP  Open")
+        #time.sleep(10)
 
+
+    #rst = str(404)
+    #pub.publish(rst)
 
 def listener():
     rospy.init_node('controller', anonymous=True)
-    sub = rospy.Subscriber("request/msg",String, getPermission)
+    sub = rospy.Subscriber("request",String, getPermission)
     while not rospy.is_shutdown():
         getPermission(request)
         rospy.sleep(1)
@@ -87,6 +97,4 @@ def listener():
 
 if __name__ == "__main__":
     listener()
-
-
 

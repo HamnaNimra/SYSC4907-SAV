@@ -8,7 +8,7 @@ import re
 import time
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-
+import random
 from imutils.object_detection import non_max_suppression
 import imutils 
 import airsim
@@ -43,8 +43,25 @@ def callback(data):
         pub.publish(reset)
         print("Reset SENT")
 
-def getControl():
-    sub = rospy.Subscriber("controller/clearance",String,callback)
+def cll(data):
+    global pub 
+    client = airsim.CarClient()
+    state = client.getCarState()
+    client.confirmConnection() 
+    print(data)
+    if data == String("5"):
+        #print ("ACCESS GRANTED")
+        # STOP THE CAR 
+        client.enableApiControl(True)
+        car_controls = airsim.CarControls()
+        car_controls.brake = 1
+        client.setCarControls(car_controls)
+        time.sleep(0.5)
+        client.enableApiControl(False)
+        time.sleep(0.5)
+
+def control():
+    sub = rospy.Subscriber("controller",String,cll)
 
 def requestControl():
     #Request Persmission to take Control over car
@@ -108,10 +125,26 @@ class DetectStopSign():
 
         print (text)
         if re.search('[a-zA-Z]', text):
+            # Show Image Processing Results
             #cv.imshow("Text",l)
-            #cv.imshow("img_hsv",image)
-            getControl()
-            requestControl()
+            cv.imshow("img_hsv",image)
+            
+            # New Subsumption Code
+            rospy.init_node('obstacle_avoid')
+            pub = rospy.Publisher("request",String,queue_size=1)
+            requestClearance = "5"
+            pub.publish(requestClearance)
+            time.sleep(1)
+            control()
+            reset = str("10")
+            pub.publish(reset)
+            time.sleep(1)
+
+
+
+            # Old Method
+            #getControl()
+            #requestControl()
 """
 Class for pedestrian detection 
 """      

@@ -1,0 +1,8 @@
+prefix=C:/catkin_ws/devel
+
+Name: obj_lidar
+Description: Description of obj_lidar
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

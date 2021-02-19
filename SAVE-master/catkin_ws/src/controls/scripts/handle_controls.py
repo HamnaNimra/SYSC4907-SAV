@@ -1,54 +1,30 @@
 #!/usr/bin/env python
-from std_msgs.msg import Float64
+from controls.msg import Control
 from threading import Semaphore
 
 import rospy
 import airsim
 
-def setup():
-    # Connect to the AirSim simulator and get controls object
-    global carControls, controlSem, simulator
-    simulator = airsim.CarClient()
-    simulator.confirmConnection()
-    simulator.enableApiControl(True) # Enable API controls
-    carControls = airsim.CarControls()
-    controlSem = Semaphore()
+# Connect to the AirSim simulator and get controls object
+client = airsim.CarClient()
+client.confirmConnection()
+client.enableApiControl(True) # Enable API controls
+car_controls = airsim.CarControls()
+control_sem = Semaphore()
 
-
-def updateSteering(data):
-    rospy.loginfo(data)
-    global carControls, controlSem, simulator
-    controlSem.acquire()
-    carControls.steering = data.data
-    simulator.setCarControls(carControls)
-    controlSem.release()    
-    
-def updateBrake(data):
-    rospy.loginfo(data)
-    global carControls, controlSem, simulator
-    controlSem.acquire()
-    carControls.brake = data.data
-    simulator.setCarControls(carControls)
-    controlSem.release() 
-      
-def updateThrottle(data):
-    rospy.loginfo(data)
-    global carControls, controlSem, simulator
-    controlSem.acquire()
-    carControls.throttle = data.data
-    simulator.setCarControls(carControls) 
-    controlSem.release() 
-
+def update_controls(controls):
+    global car_controls
+    rospy.loginfo(controls)
+    car_controls.brake = controls.brake
+    car_controls.throttle = controls.throttle
+    car_controls.steering = controls.steering
+    client.setCarControls(car_controls)
 
 def controlListener():
     rospy.init_node('control', anonymous=True)
 
-    setup()
-
     # Subscribe to the different types of controls
-    rospy.Subscriber('action/steering', Float64, updateSteering)
-    rospy.Subscriber('acc/throttle', Float64, updateThrottle)
-    rospy.Subscriber('acc/brake', Float64, updateBrake)
+    rospy.Subscriber('control/control', Control, update_controls)
 
     # Repeat the listener
     rospy.spin()

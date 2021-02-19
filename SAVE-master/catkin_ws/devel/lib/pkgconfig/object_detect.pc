@@ -1,0 +1,8 @@
+prefix=C:/catkin_ws/devel
+
+Name: object_detect
+Description: Description of object_detect
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

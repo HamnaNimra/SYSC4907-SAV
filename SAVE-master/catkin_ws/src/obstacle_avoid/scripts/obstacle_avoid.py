@@ -12,7 +12,7 @@ import pprint
 
 import time
 
-pub = rospy.Publisher("request/msg",String,queue_size=10)
+#pub = rospy.Publisher("request",String,queue_size=1)
 
 class DistanceTest:
     def __init__(self):
@@ -31,6 +31,14 @@ class DistanceTest:
         points = numpy.reshape(points, (int(points.shape[0]/3), 3))
         return points
 
+    def callback(r):
+        print("Permission :",r)
+        if data == String("5"):
+            print ("ACCESS GRANTED")
+            time.sleep(2)
+            reset = str("10")
+            pub.publish(reset)
+
     def execute(self):
         state = self.client.getCarState()
         distanceData = self.client.getDistanceSensorData();
@@ -45,47 +53,70 @@ class DistanceTest:
                 for i in points[:4]:
                     x.append(i[0])
                 objDistance = sum(x) / len (x)
-                print (objDistance)
+                #print (objDistance)
                 if objDistance < 10:
-                    # Stop the car
+                    #cll(String("5"))
+                    rospy.init_node('obstacle_avoid')
+                    pub = rospy.Publisher("request",String,queue_size=1)
+                    requestClearance = "5"
+                    pub.publish(requestClearance)
+                    time.sleep(1)
                     control()
-                    requestControl()
-def callback(data):
+                    reset = str("10")
+                    pub.publish(reset)
+                    time.sleep(1)
+                    #BS
+                    #sub = rospy.Subscriber("controller",String,self.callback)
+                    #print("Sub Reached")
+                    #rospy.spin()
+                    # Working Control Code
+                    #self.client.enableApiControl(True)
+                    #car_controls = airsim.CarControls()
+                    #car_controls.steering = -1
+                    #car_controls.throttle = 1
+                    #self.client.setCarControls(car_controls)
+                    #time.sleep(2.0)
+                    #self.client.enableApiControl(False)
+                    # Stop the car
+
+                    #requestControl()
+def cll(data):
     global pub
+    client = airsim.CarClient()
+    state = client.getCarState()
+    client.confirmConnection() 
+    print(data)
     if data == String("5"):
-        print ("ACCESS GRANTED")
+        #print ("ACCESS GRANTED")
         # STOP THE CAR 
-        client = airsim.CarClient()
-        client.confirmConnection()
         client.enableApiControl(True)
         car_controls = airsim.CarControls()
-        print("STEERING")
-        car_controls.brake = 1
         car_controls.steering = -1
-        car_controls.throttle = 1
+        car_controls.throttle = 0.5
         client.setCarControls(car_controls)
-        reset = "10"
-        pub.publish(reset)
-        print("Reset Sent")
+        time.sleep(0.5)
         client.enableApiControl(False)
+        time.sleep(0.5)
 
 def control():
-    sub = rospy.Subscriber("controller/clearance",String,callback)
+    sub = rospy.Subscriber("controller",String,cll)
 
 
 def requestControl():
     global pub 
     # Request Permission to take control over car
     rospy.init_node('obstacle_avoid')#, anonymous=True)
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(1)
     requestClearance = "5"
     pub.publish(requestClearance)
+    print("DONE!!!")
 
 # CLass for Stop Sign Detection
 def listener():
     sensorTest = DistanceTest()
     while (True):
         sensorTest.execute()
+        time.sleep(0.2)
 
 if __name__ == "__main__":
     listener()

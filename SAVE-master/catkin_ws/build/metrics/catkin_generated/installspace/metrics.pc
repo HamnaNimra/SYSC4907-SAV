@@ -1,0 +1,8 @@
+prefix=C:/catkin_ws/install
+
+Name: metrics
+Description: Description of metrics
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

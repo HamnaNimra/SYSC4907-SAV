@@ -102,19 +102,12 @@ class ACC:
             self.throttle = 0.0
             self.brake = 0.0
 
-
-        # If speed is zero, hit the brakes
-        if self.max_speed <= 0.0:
-            self.throttle = 0.0
-            self.brake = 1.0
-
-
         rospy.loginfo('Brake: {} Throttle: {}'.format(self.brake, self.throttle))
 
         self.throttlePub.publish(self.throttle)
         self.brakePub.publish(self.brake)
 
-    def adjust_for_turn_lka(self, steering_data):
+    def adjust_for_turn(self, steering_data):
         steering = abs(steering_data.data)
         # Simple conditional for now. Needs to be updated: TODO
         if steering > 1:
@@ -125,29 +118,10 @@ class ACC:
             self.set_speed = self.max_speed - 5.0
         else:
             self.set_speed = self.max_speed
-
-
-    def adjust_for_turn_corner(self, steering_data):
-        steering = abs(steering_data.data)
-        # Simple conditional for now. Needs to be updated: TODO
-        if steering >= 1:
-            self.set_speed = self.max_speed * 0.15
-        elif steering > 0.5:
-            self.set_speed = self.max_speed * 0.3
-        elif steering > 0.3:
-            self.set_speed = self.max_speed * 0.5
-        else:
-            self.set_speed = self.max_speed
-
-    def updateSetSpeed(self, speed):
-        speed = speed.data
-        self.max_speed = speed
-        self.set_speed = speed
-        rospy.loginfo('Updating speed set point: {}'.format(speed))
-
+        
     def control_speed(self):
         rospy.Subscriber('sensor/speed', Float64, self.update_speed)
-        rospy.Subscriber('lka/steering', Float64, self.adjust_for_turn_corner)
+        rospy.Subscriber('lka/steering', Float64, self.adjust_for_turn)
         rospy.spin()
 
     """
