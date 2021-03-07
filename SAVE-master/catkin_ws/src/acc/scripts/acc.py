@@ -110,12 +110,12 @@ class ACC:
     def adjust_for_turn(self, steering_data):
         steering = abs(steering_data.data)
         # Simple conditional for now. Needs to be updated: TODO
-        if steering > 1:
-            self.set_speed = 5.0 # 5 m/s -> take turn slow
+        if steering >= 1:
+            self.set_speed = self.max_speed * 0.15
         elif steering > 0.5:
-            self.set_speed = 8.0
+            self.set_speed = self.max_speed * 0.3
         elif steering > 0.3:
-            self.set_speed = self.max_speed - 5.0
+            self.set_speed = self.max_speed * 0.5
         else:
             self.set_speed = self.max_speed
         
@@ -139,5 +139,5 @@ class ACC:
     """
 
 # test ACC
-acc = ACC(4)
+acc = ACC(8)
 acc.control_speed()

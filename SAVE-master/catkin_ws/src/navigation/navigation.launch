@@ -1,0 +1,6 @@
+<launch>
+	<node name="control" pkg="navigation" type="control.py" />
+	<node name="path_planner" pkg="navigation" type="pathPlanning.py" />
+	<node name="car" pkg="navigation" type="car_Basic.py" />
+	<node name="map" pkg="navigation" type="map.py" />
+</launch>

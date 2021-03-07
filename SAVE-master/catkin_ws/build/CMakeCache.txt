@@ -299,6 +299,18 @@ agent_BINARY_DIR:STATIC=C:/catkin_ws/build/agent
 //Value Computed by CMake
 agent_SOURCE_DIR:STATIC=C:/catkin_ws/src/agent
 
+//Value Computed by CMake
+beginner_tutorials_BINARY_DIR:STATIC=C:/catkin_ws/build/beginner_tutorials
+
+//Value Computed by CMake
+beginner_tutorials_SOURCE_DIR:STATIC=C:/catkin_ws/src/beginner_tutorials
+
+//Value Computed by CMake
+car_BINARY_DIR:STATIC=C:/catkin_ws/build/car
+
+//Value Computed by CMake
+car_SOURCE_DIR:STATIC=C:/catkin_ws/src/car
+
 //The directory containing a CMake configuration file for catkin.
 catkin_DIR:PATH=C:/opt/ros/melodic/x64/share/catkin/cmake
 
@@ -307,6 +319,12 @@ controller_BINARY_DIR:STATIC=C:/catkin_ws/build/controller
 
 //Value Computed by CMake
 controller_SOURCE_DIR:STATIC=C:/catkin_ws/src/controller
+
+//Value Computed by CMake
+controllers_BINARY_DIR:STATIC=C:/catkin_ws/build/controllers
+
+//Value Computed by CMake
+controllers_SOURCE_DIR:STATIC=C:/catkin_ws/src/controllers
 
 //Value Computed by CMake
 controls_BINARY_DIR:STATIC=C:/catkin_ws/build/controls
@@ -353,6 +371,12 @@ lka_BINARY_DIR:STATIC=C:/catkin_ws/build/lka
 //Value Computed by CMake
 lka_SOURCE_DIR:STATIC=C:/catkin_ws/src/lka
 
+//Value Computed by CMake
+maps_BINARY_DIR:STATIC=C:/catkin_ws/build/maps
+
+//Value Computed by CMake
+maps_SOURCE_DIR:STATIC=C:/catkin_ws/src/maps
+
 //The directory containing a CMake configuration file for message_filters.
 message_filters_DIR:PATH=C:/opt/ros/melodic/x64/share/message_filters/cmake
 
@@ -372,6 +396,12 @@ metrics_SOURCE_DIR:STATIC=C:/catkin_ws/src/metrics
 nav_msgs_DIR:PATH=C:/opt/ros/melodic/x64/share/nav_msgs/cmake
 
 //Value Computed by CMake
+navigation_BINARY_DIR:STATIC=C:/catkin_ws/build/navigation
+
+//Value Computed by CMake
+navigation_SOURCE_DIR:STATIC=C:/catkin_ws/src/navigation
+
+//Value Computed by CMake
 obj_lidar_BINARY_DIR:STATIC=C:/catkin_ws/build/obj_lidar
 
 //Value Computed by CMake
@@ -388,6 +418,12 @@ obstacle_avoid_BINARY_DIR:STATIC=C:/catkin_ws/build/obstacle_avoid
 
 //Value Computed by CMake
 obstacle_avoid_SOURCE_DIR:STATIC=C:/catkin_ws/src/obstacle_avoid
+
+//Value Computed by CMake
+path_planners_BINARY_DIR:STATIC=C:/catkin_ws/build/path_planners
+
+//Value Computed by CMake
+path_planners_SOURCE_DIR:STATIC=C:/catkin_ws/src/path_planners
 
 //The directory containing a CMake configuration file for rosconsole.
 rosconsole_DIR:PATH=C:/opt/ros/melodic/x64/share/rosconsole/cmake
@@ -431,6 +467,12 @@ stop_detect_BINARY_DIR:STATIC=C:/catkin_ws/build/stop_detect
 //Value Computed by CMake
 stop_detect_SOURCE_DIR:STATIC=C:/catkin_ws/src/stop_detect
 
+//Value Computed by CMake
+telemetrics_BINARY_DIR:STATIC=C:/catkin_ws/build/telemetrics
+
+//Value Computed by CMake
+telemetrics_SOURCE_DIR:STATIC=C:/catkin_ws/src/telemetrics
+
 //The directory containing a CMake configuration file for tf2.
 tf2_DIR:PATH=C:/opt/ros/melodic/x64/share/tf2/cmake
 
@@ -442,6 +484,18 @@ tf2_py_DIR:PATH=C:/opt/ros/melodic/x64/share/tf2_py/cmake
 
 //The directory containing a CMake configuration file for tf2_ros.
 tf2_ros_DIR:PATH=C:/opt/ros/melodic/x64/share/tf2_ros/cmake
+
+//Value Computed by CMake
+translators_BINARY_DIR:STATIC=C:/catkin_ws/build/translators
+
+//Value Computed by CMake
+translators_SOURCE_DIR:STATIC=C:/catkin_ws/src/translators
+
+//Value Computed by CMake
+world_maps_BINARY_DIR:STATIC=C:/catkin_ws/build/world_maps
+
+//Value Computed by CMake
+world_maps_SOURCE_DIR:STATIC=C:/catkin_ws/src/world_maps
 
 //The directory containing a CMake configuration file for xmlrpcpp.
 xmlrpcpp_DIR:PATH=C:/opt/ros/melodic/x64/share/xmlrpcpp/cmake
@@ -544,7 +598,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MT
 CMAKE_MT-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=13
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=9
 //Platform information initialized
 CMAKE_PLATFORM_INFO_INITIALIZED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_RC_COMPILER

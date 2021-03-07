@@ -11,19 +11,6 @@ from std_msgs.msg import Float64
 from lka.msg import Lane
 from lka.msg import Lanes
 
-class AvoidCars():
-
-    def __init__(self):
-        self.left_line_info = Lane()
-        self.right_line_info = Lane()
-        # Used to ensure getting line info is an atomic instructions
-        # due to the time required for object detection 
-        self.sem = threading.Semaphore() 
-        self.throttlePub = rospy.Publisher('object_avoid/throttle', Float64, queue_size=1)
-        self.brakePub = rospy.Publisher('object_avoid/brake', Float64, queue_size=1)
-        self.clearPub = rospy.Publisher('object_avoid/clear', Empty, queue_size=1)
-
-
 class AvoidPedestrians():
 
     def __init__(self):

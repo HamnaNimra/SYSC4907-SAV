@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from task import Task
 from layer import Layer
 from controls.msg import Control
@@ -20,16 +18,16 @@ def start_agent():
     object_layer = Layer(10, 'object_avoid', [('brake', Float64)])
 
     # Create Tasks
-    highway_driving = Task(
+    neighbourhood_driving = Task(
         controlPub,
         [
             object_layer, # highest priority
-            acc_layer, 
+            acc_layer,
             lka_layer
         ]
     )
 
-    highway_driving.run()
+    neighbourhood_driving.run()
 
     rospy.spin()
 
