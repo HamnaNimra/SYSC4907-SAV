@@ -19,17 +19,21 @@ import threading
 x = 0
 release = String("0")
 global sub
-
-# implement a Queue System + Multirhreading it
+request_queue = []
+correctRequest=[String("5"),String("4"),String("3"),String("2"),String("1")]
 
 
 request = None
 pub = rospy.Publisher("controller",String, queue_size=1)
 
 
-def getPermission(r):
-    clearance_level = r
-    print("Input:",r)
+def getPermission(i):
+    if i in correctRequest: 
+        request_queue.append(i)
+        clearance_level = max(request_queue)
+        print(clearance_level)
+    else: 
+        clearance_level = i
     # This Function will get all the commands and allow control
     obstacle_detection = String("5")
     acc_module = String("4")
