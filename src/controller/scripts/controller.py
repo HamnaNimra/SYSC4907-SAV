@@ -4,6 +4,7 @@ from threading import Semaphore
 from std_msgs.msg import String
 
 import rospy
+import math
 import airsim
 import numpy
 import pprint
@@ -16,6 +17,10 @@ import threading
 # LKA SModule 2
 # Geo-Mapping 1
 x = 0
+release = String("0")
+global sub
+
+# implement a Queue System + Multirhreading it
 
 
 request = None
@@ -24,70 +29,57 @@ pub = rospy.Publisher("controller",String, queue_size=1)
 
 def getPermission(r):
     clearance_level = r
+    print("Input:",r)
     # This Function will get all the commands and allow control
     obstacle_detection = String("5")
     acc_module = String("4")
     stopsign_detection = String("3")
     lka_module = String("2")
     geo_module = String("1")
-    resetOBJ = String("10")
-    resetSTOP = String("11")
-
+    reset = String("11")
     global x  
-    print("X:",x)
+    global release  
     if clearance_level == obstacle_detection:
-        if x == 0:
+        if x == 0 and release == String("0"):
+            release = String("15")
             x = 1
-            print("OBSTACLE Locked")
             key = str(5)
             pub.publish(key)
-            print ("Obstacle Detection")
+            print("Control: OBJ")
     if clearance_level == acc_module:
-        if x == 0:
+        if x == 0 and release == String("0"):
+            release = String("14")
             x = 1
-            print("Lock Closed")
             key = str(4)  
             pub.publish(key)
-            print("KEY:",key)
-            print ("ACCESS SENT ACC")
+            print ("Control: ACC")
     if clearance_level == stopsign_detection:
-        if x  == 0:
+        if x == 0 and release == String("0"):
+            release = String("13")
             x = 1
-            print("STOP Locked")
             key = str(3)
             pub.publish(key)
-            print("KEY:",key)
-            print ("STOP Detection")
+            print ("Control: STOP")
     if clearance_level == lka_module:
-        if x == 0:
+        if x == 0 and release == String("0"):
+            release = String("12")
             x = 1
-            print("Lock Closed")
             key = str(2)
             pub.publish(key)
-            print ("ACCESS SENT LKA")
+            print ("Control: LKA")
     if clearance_level == geo_module:
-        if x == 0:
+        if x == 0 and release == String("0"):
+            release = String("11")
             x = 1
-            print("Lock Closed")
             key = str(1)
             pub.publish(key)
             print ("ACCESS SENT GEO Module")
-    if clearance_level == resetOBJ:
+    #print("C:", clearance_level)
+    #print("RELEASE:",release)
+    if clearance_level == release:
+        print("CLEARED")
         x = 0
-        #rst = str(404)
-        #pub.publish(rst)
-        print("OBJ Open")
-        #time.sleep(10)
-    if clearance_level == resetSTOP:
-        x = 0
-        #rst = str(404)
-        #pub.publish(rst)
-        print("STOP  Open")
-        #time.sleep(10)
-
-
-    #rst = str(404)
-    #pub.publish(rst)
+        release = String("0")
 
 def listener():
     rospy.init_node('controller', anonymous=True)
@@ -96,8 +88,5 @@ def listener():
         getPermission(request)
         rospy.sleep(1)
 
-    #rate=rospy.Rate(10)
-
 if __name__ == "__main__":
     listener()
-

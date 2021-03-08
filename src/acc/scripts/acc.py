@@ -2,6 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64
+from std_msgs.msg import String
 
 import time
 import math
@@ -53,6 +54,11 @@ class ACC:
         out = 1 - math.exp(-1 * inp)
         return out
 
+    def cll(self,data):
+        if data ==String("4"):
+            self.throttlePub.publish(self.throttle)
+            self.brakePub.publish(self.brake)
+
     """
     Controls the speed of the car and keeps it around the control speed.    
     """
@@ -103,9 +109,17 @@ class ACC:
             self.brake = 0.0
 
         rospy.loginfo('Brake: {} Throttle: {}'.format(self.brake, self.throttle))
+        #HERE
+        pub = rospy.Publisher("request",String,queue_size=1)
+        r = "4"
+        pub.publish(r)
+        #time.sleep(0.5)
+        reset = "14"
 
-        self.throttlePub.publish(self.throttle)
-        self.brakePub.publish(self.brake)
+        pub.publish(reset)
+        
+        #self.throttlePub.publish(self.throttle)
+        #self.brakePub.publish(self.brake)
 
     def adjust_for_turn(self, steering_data):
         steering = abs(steering_data.data)
@@ -122,6 +136,7 @@ class ACC:
     def control_speed(self):
         rospy.Subscriber('sensor/speed', Float64, self.update_speed)
         rospy.Subscriber('lka/steering', Float64, self.adjust_for_turn)
+        sub = rospy.Subscriber('controller',String,self.cll)
         rospy.spin()
 
     """
@@ -139,5 +154,5 @@ class ACC:
     """
 
 # test ACC
-acc = ACC(4)
+acc = ACC(6)
 acc.control_speed()

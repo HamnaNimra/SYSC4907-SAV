@@ -17,7 +17,7 @@ def start_agent():
     # Create Layers
     lka_layer = Layer(10, 'lka', [('steering', Float64)])
     acc_layer = Layer(5, 'acc', [('throttle', Float64),('brake', Float64)])
-    object_layer = Layer(10, 'object_avoid', [('brake', Float64)])
+    object_layer = Layer(10, 'obstacle_avoid', [('throttle', Float64), ('brake', Float64)])
 
     # Create Tasks
     highway_driving = Task(

@@ -14,7 +14,9 @@ import time
 
 #pub = rospy.Publisher("request",String,queue_size=1)
 
+Done = False
 class DistanceTest:
+    global Done
     def __init__(self):
         # Connect to AirSim
         self.client = airsim.CarClient()
@@ -23,6 +25,7 @@ class DistanceTest:
         self.brake = 0
         self.throttlePub = rospy.Publisher('acc/throttle', Float64, queue_size=1)
         self.brakePub = rospy.Publisher('acc/brake', Float64, queue_size=1)
+        self.steeringPub = rospy.Publisher('lka/steering', Float64, queue_size=1)
 
        # self.client.enableApiControl(True)
 
@@ -36,8 +39,6 @@ class DistanceTest:
         if data == String("5"):
             print ("ACCESS GRANTED")
             time.sleep(2)
-            reset = str("10")
-            pub.publish(reset)
 
     def execute(self):
         state = self.client.getCarState()
@@ -54,17 +55,16 @@ class DistanceTest:
                     x.append(i[0])
                 objDistance = sum(x) / len (x)
                 print (objDistance)
-                if objDistance < 15:
+                if objDistance < 10:
                     #cll(String("5"))
                     rospy.init_node('obstacle_avoid')
                     pub = rospy.Publisher("request",String,queue_size=1)
                     requestClearance = "5"
                     pub.publish(requestClearance)
-                    time.sleep(1)
                     control()
-                    reset = str("10")
-                    pub.publish(reset)
-                    time.sleep(1)
+                    if Done == True:
+                        reset = str("15")
+                        pub.publish(reset)
                     #BS
                     #sub = rospy.Subscriber("controller",String,self.callback)
                     #print("Sub Reached")
@@ -81,7 +81,16 @@ class DistanceTest:
 
                     #requestControl()
 def cll(data):
-    global pub
+    l = DistanceTest()
+    global Done
+    if data == String("5"):
+        l.throttlePub.publish(0.5)
+        l.steeringPub.publish(-0.6)
+        Done = True
+
+
+    '''
+    global Done
     client = airsim.CarClient()
     state = client.getCarState()
     client.confirmConnection() 
@@ -89,15 +98,13 @@ def cll(data):
     if data == String("5"):
         #print ("ACCESS GRANTED")
         # STOP THE CAR 
-        client.enableApiControl(True)
         car_controls = airsim.CarControls()
-        car_controls.steering = -1
+        car_controls.steering = -1 
         car_controls.throttle = 1
         client.setCarControls(car_controls)
-        time.sleep(0.7)
-        client.enableApiControl(False)
-        time.sleep(0.5)
-
+        time.sleep(1)
+        Done = True
+    '''
 def control():
     sub = rospy.Subscriber("controller",String,cll)
 
@@ -109,14 +116,13 @@ def requestControl():
     rate = rospy.Rate(1)
     requestClearance = "5"
     pub.publish(requestClearance)
-    print("DONE!!!")
 
-# CLass for Stop Sign Detection
+# CLass for Obstacle Sign Detection
 def listener():
     sensorTest = DistanceTest()
     while (True):
         sensorTest.execute()
-        time.sleep(0.2)
 
 if __name__ == "__main__":
     listener()
+

@@ -20,57 +20,21 @@ from object_avoid import AvoidPedestrians
 from lka.msg import Lane
 from lka.msg import Lanes
 from std_msgs.msg import String
+# CLass for Stop Sign Detection
 
-
-x = 0
-
-def callback(data):
-    global pub
-    print(String("3"))
-    if data == String("3"):
-        print("ACCESS GRANTED")
-        # STOP THE CAR
-        client = airsim.CarClient()
-        client.confirmConnection()
-        client.enableApiControl(True)
-        car_controls = airsim.CarControls()
-        rospy.loginfo("STOP")
-        car_controls.brake = 1
-        client.setCarControls(car_controls)
-        reset = "10"
-        pub.publish(reset)
+Done = False
+pub = rospy.Publisher("request/msg",String,queue_size=10)
 
 def cll(data):
-    global x
-    client = airsim.CarClient()
-    state = client.getCarState()
-    client.confirmConnection() 
-    print(data)
-    if data == String("3"):
-        # STOP THE CAR 
-        client.enableApiControl(True)
-        car_controls = airsim.CarControls()
-        time.sleep(0.7)
-        car_controls.brake = 1
-        client.setCarControls(car_controls)
-        time.sleep(1)
-        car_controls.brake = 0
-        car_controls.throttle = 1
-        client.setCarControls(car_controls)
-        client.enableApiControl(False)
-        print("API OFF")
+    global Done
+    b=DetectStopSign()
+    if data == String("5"):
+        b.brakePub.publish(1)
+        time.sleep(5)
+        Done = True
 
 def control():
     sub = rospy.Subscriber("controller",String,cll)
-
-def requestControl():
-    #Request Persmission to take Control over car
-    #rospy.init_node('stopSign_Detect')#, anonymous=True)
-    global pub
-    rate = rospy.Rate(10)
-    requestClearance = str("3")
-    pub.publish(requestClearance)
-
 
 class DetectStopSign():
 
@@ -116,45 +80,101 @@ class DetectStopSign():
         text = image[y:y+h, x:x+w]
         a = imutils.resize(text, width=min(85, image.shape[1]))
         l = cv.Canny(a,100,295)
-        #cv.imshow("Canny",l)
         # For Detecting the TEXT from the stop sign
         cv.waitKey(5)
         # TEMOVE THE COMMENT #
         text = pytesseract.image_to_string(l) 
         rospy.loginfo(text)
-        cv.imshow("Text",l)
-       # cv.imshow("img_hsv",image)
-
-        if re.search('[a-zA-Z]', text):
+        print (text)
+        #if re.search('[a-zA-Z]', text):
+        if text:
+            # Show Image Processing Results
+            cv.imshow("Text",l)
+            cv.imshow("img_hsv",image)
             # New Subsumption Code
+            #rospy.init_node('obstacle_avoid')
             pub = rospy.Publisher("request",String,queue_size=1)
+            print("REAHCED HERE ___________")
             requestClearance = "3"
             pub.publish(requestClearance)
             control()
-            reset = str("11")
-            pub.publish(reset)
+            print("---------------",Done)
+            if Done == True:
+                reset = str("13")
+                pub.publish(reset)
+                print("RESET SET")
 
-    def test(self,img):
-        global x
-        i = random.randint(0,5)
-        if i == 4:
-            print("------I-----",i)
-            pub = rospy.Publisher("request",String,queue_size=1)
-            requestClearance = "3"
-            pub.publish(requestClearance)
-            control()
-            #if x == 1:
-            reset = str("11")
-            pub.publish(reset)
-             #   x = 0
+"""
+Class for pedestrian detection 
+"""      
+class DetectPedestrians():
 
+    def __init__(self, avoid_class):
+        self.hog = cv.HOGDescriptor()
+        self.hog.setSVMDetector(cv.HOGDescriptor_getDefaultPeopleDetector())
+        self.avoid = avoid_class
+        
+    def getImage(self, img):
+        bridge  = CvBridge()
+
+        try:
+            cv_img = bridge.imgmsg_to_cv2(img, desired_encoding="passthrough")
+        except CvBridgeError as e:
+            rospy.loginfo(e)
+        
+        return cv_img
+
+    def processImage(self, image):
+        image_grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        image_grey = cv.equalizeHist(image_grey)
+        return image_grey
+         
+    def detectAndDisplay(self, img):
+        image = self.getImage(img)
+        # resize image to improve the accuracy and decrease detection time 
+        image = imutils.resize(image, width=min(400, image.shape[1]))
+        # detect people in the image
+        # winStride indicates the step size for the boxes that search the image
+        # padding indicates the number of pixels added to pad the sliding boxes 
+        # scale indicates the scale of the image 
+        (rects, weights) = self.hog.detectMultiScale(image, winStride=(4, 4),
+            padding=(8, 8), scale=1.05)
+
+        # apply non-maxima suppression to the bounding boxes using a
+        # fairly large overlap threshold to try to maintain overlapping
+        # boxes that are still people
+        rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
+        pick = non_max_suppression(rects, probs=None, overlapThresh=0.65)
+        # # draw the final bounding boxes
+        # for (xA, yA, xB, yB) in pick:
+        #     cv.rectangle(image, (xA, yA), (xB, yB), (0, 255, 0), 2)
+        # # display image
+        # cv.imshow("After NMS", image)
+        # cv.waitKey(1)
+
+        self.avoid.objects_in_road(pick)
+
+## ==============================================================================================================================================================================
 
 def listener():
+    #global detect_ped 
+    #global avoid_ped 
     rospy.init_node('object_detect', anonymous=True)
+    avoid_ped = AvoidPedestrians()
+    detect_ped = DetectPedestrians(avoid_ped)
     detect_stop = DetectStopSign()
+    #rospy.Subscriber('airsim/image_raw', Image, detect_ped.detectAndDisplay)
     rospy.Subscriber('airsim/image_raw', Image, detect_stop.detectAndDisplay)
-    #rospy.Subscriber('airsim/image_raw', Image, detect_stop.test)
+    #rospy.Subscriber('lka/lanes', Lanes, detect_ped.avoid.get_lines)
     rospy.spin()
+
+
+    while True:
+        data_car1 = client.getDistanceSensorData(vehicle_name="Car1")
+        data_car2 = client.getDistanceSensorData(vehicle_name="Car2")
+        rospy.loginfo("Distance sensor data: Car1: {data_car1.distance}, Car2: {data_car2.distance}")
+    client = airsim.CarClient()
+    client.confirmConnection()
 
 if __name__ == "__main__":
     listener()

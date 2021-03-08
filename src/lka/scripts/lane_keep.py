@@ -3,8 +3,10 @@ import cv2 as cv
 import numpy as np
 
 import rospy
+import time
 
 from std_msgs.msg import Float64
+from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from lka.msg import Lane
 from lka.msg import Lanes
@@ -37,6 +39,12 @@ class LaneKeepAssist:
         rospy.loginfo("lane values:{}".format(values))
         lane.slope = values[0]
         lane.y_cept = values[1]
+
+    def cll(self,data):
+        if data == String("2"):
+            self.steeringPub.publish(self.steering)
+            #self.lanePub.publish(lanes_msg)
+
 
     def processImage(self, img):
         bridge  = CvBridge()
@@ -101,8 +109,14 @@ class LaneKeepAssist:
                     self.steering = (current_to_prev * x_steering) + ((1-current_to_prev) * self.steering)
 
                     rospy.loginfo(self.steering)
-
-                    self.steeringPub.publish(self.steering)
+                    # HERE 
+                    pub = rospy.Publisher("request",String,queue_size=1)
+                    r="2"
+                    pub.publish(r)
+                    #time.sleep(0.5)
+                    reset= "12"
+                    pub.publish(reset)
+                    #self.steeringPub.publish(self.steering)
                     self.lanePub.publish(lanes_msg)
                 else: # An error
                     rospy.loginfo('Unable to detect lines...')
@@ -115,6 +129,7 @@ def listener():
     rospy.init_node('lka', anonymous=True)
     lka = LaneKeepAssist(True)
     rospy.Subscriber('airsim/image_raw', Image, lka.processImage)
+    rospy.Subscriber('controller',String,lka.cll)
     rospy.spin()
 
 if __name__ == "__main__":
