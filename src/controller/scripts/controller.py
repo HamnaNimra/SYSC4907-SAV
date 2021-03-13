@@ -21,6 +21,7 @@ release = String("0")
 global sub
 request_queue = []
 correctRequest=[String("5"),String("4"),String("3"),String("2"),String("1")]
+# implement a Queue System + Multirhreading it
 
 
 request = None
@@ -28,12 +29,15 @@ pub = rospy.Publisher("controller",String, queue_size=1)
 
 
 def getPermission(i):
+    '''
     if i in correctRequest: 
         request_queue.append(i)
         clearance_level = max(request_queue)
         print(clearance_level)
     else: 
         clearance_level = i
+    '''
+    clearance_level = i
     # This Function will get all the commands and allow control
     obstacle_detection = String("5")
     acc_module = String("4")
@@ -63,6 +67,7 @@ def getPermission(i):
             x = 1
             key = str(3)
             pub.publish(key)
+            print("KEY:",key)
             print ("Control: STOP")
     if clearance_level == lka_module:
         if x == 0 and release == String("0"):
@@ -78,6 +83,7 @@ def getPermission(i):
             key = str(1)
             pub.publish(key)
             print ("ACCESS SENT GEO Module")
+    #print("RELEASE:",release)
     #print("C:", clearance_level)
     #print("RELEASE:",release)
     if clearance_level == release:

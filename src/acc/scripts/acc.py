@@ -26,6 +26,7 @@ class ACC:
         self.brake = 0
         self.throttlePub = rospy.Publisher('acc/throttle', Float64, queue_size=1)
         self.brakePub = rospy.Publisher('acc/brake', Float64, queue_size=1)
+        #self.subsumptionPub = rospy.Publisher("request",String,queue_size=1)
 
         self.integral = 0
         self.derivative = 0
@@ -110,12 +111,15 @@ class ACC:
 
         rospy.loginfo('Brake: {} Throttle: {}'.format(self.brake, self.throttle))
         #HERE
+        #subsumptionPub = rospy.Publisher("request",String,queue_size=1)
         pub = rospy.Publisher("request",String,queue_size=1)
         r = "4"
+        #self.subsumptionPub.publish(r)
         pub.publish(r)
         #time.sleep(0.5)
         reset = "14"
 
+        #self.subsumptionPub.publish(reset)
         pub.publish(reset)
         
         #self.throttlePub.publish(self.throttle)
@@ -154,5 +158,5 @@ class ACC:
     """
 
 # test ACC
-acc = ACC(6)
+acc = ACC(3)
 acc.control_speed()

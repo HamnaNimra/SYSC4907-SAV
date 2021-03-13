@@ -21,7 +21,7 @@ class LaneKeepAssist:
         self.steeringPub = rospy.Publisher('lka/steering', Float64, queue_size=1)
         self.lanePub = rospy.Publisher('lka/lanes', Lanes, queue_size=1)
         self.marginsPub = rospy.Publisher('lka/margins', Margins, queue_size=1)
-
+#        self.subsumptionPub = rospy.Publisher("request",String,queue_size=1)
         self.steering = 0.0
         self.metrics = metrics
 
@@ -112,9 +112,11 @@ class LaneKeepAssist:
                     # HERE 
                     pub = rospy.Publisher("request",String,queue_size=1)
                     r="2"
+                    #self.subsumptionPub.publish(r)
                     pub.publish(r)
                     #time.sleep(0.5)
                     reset= "12"
+                    #self.subsumptionPub.publish(reset)
                     pub.publish(reset)
                     #self.steeringPub.publish(self.steering)
                     self.lanePub.publish(lanes_msg)
