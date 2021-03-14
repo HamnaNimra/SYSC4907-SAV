@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 from controls.msg import Control
 from threading import Semaphore
+from std_msgs.msg import Float64
+from std_msgs.msg import String
+
 
 import rospy
 import airsim
@@ -9,83 +12,125 @@ import pprint
 
 import time
 
+#pub = rospy.Publisher("request",String,queue_size=1)
 
+Done = False
 class DistanceTest:
+    global Done
     def __init__(self):
         # Connect to AirSim
         self.client = airsim.CarClient()
         self.client.confirmConnection()
+        self.throttle = 0 
+        rospy.init_node('obstacle_avoid')
+        self.brake = 0
+        self.throttlePub = rospy.Publisher('acc/throttle', Float64, queue_size=1)
+        self.brakePub = rospy.Publisher('acc/brake', Float64, queue_size=1)
+        self.steeringPub = rospy.Publisher('lka/steering', Float64, queue_size=1)
+
        # self.client.enableApiControl(True)
 
     def parse_lidarData(self, data):
         points = numpy.array(data.point_cloud, dtype=numpy.dtype('f4'))
         points = numpy.reshape(points, (int(points.shape[0]/3), 3))
-        print "____________ "
-        x =[]
-        for i in points:
-             x.append(i[0])
-        avg = sum(x) / len (x)
-        print avg
-        if avg < 12:
-            print "BRAKE"
         return points
 
+    def callback(r):
+        print("Permission :",r)
+        if data == String("5"):
+            print ("ACCESS GRANTED")
+            time.sleep(2)
+
     def execute(self):
+        global Done
         state = self.client.getCarState()
         distanceData = self.client.getDistanceSensorData();
-        #rospy.loginfo("Distance Data_____________________")
-        #rospy.loginfo(distanceData.distance)
-        if ((distanceData.distance > 1) and (distanceData.distance < 10)):
-            car_controls = airsim.CarControls()
-            #rospy.loginfo("STOP")
-            car_controls.steering = 1
-            car_controls.throttle = 1
-            time.sleep(2.0)
-            self.client.setCarControls(car_controls)
 
-        # Added Stuff
-        for i in range(1,3):
-            lidarData = self.client.getLidarData();
-            if (len(lidarData.point_cloud) < 3):
-                #print("\tNo points received from Lidar data")
-                print('')
-            else:
-                points = self.parse_lidarData(lidarData)
-                #print("\tReading %d: time_stamp: %d number_of_points: %d" % (i, lidarData.time_stamp, len(points)))
-                #print("\t\tlidar position: %s" % (pprint.pformat(lidarData.pose.position)))
-                #print("\t\tlidar orientation: %s" % (pprint.pformat(lidarData.pose.orientation)))
+        #for i in range(1,3):
+        lidarData = self.client.getLidarData();
+        if (len(lidarData.point_cloud) < 3):
+            print("\tNo points received from Lidar data")
+        else:
+            points = self.parse_lidarData(lidarData)
+            x =[]
+            for o in points[:4]:
+                x.append(o[0])
+            objDistance = sum(x) / len (x)
+            print (objDistance)
+            if objDistance < 10:
+                    #cll(String("5"))
+                pub = rospy.Publisher("request",String,queue_size=1)
+                requestClearance = "5"
+                pub.publish(requestClearance)
+                control()
+                print("A Control",Done)
+                time.sleep(1)
+                reset = str("15")
+                pub.publish(reset)
+                print("XXXXX",Done)
+                if Done == True:
+                    reset = str("15")
+                    pub.publish(reset)
+                    Done = False
+                    #BS
+                    #sub = rospy.Subscriber("controller",String,self.callback)
+                    #print("Sub Reached")
+                    #rospy.spin()
+                    # Working Control Code
+                    #self.client.enableApiControl(True)
+                    #car_controls = airsim.CarControls()
+                    #car_controls.steering = -1
+                    #car_controls.throttle = 1
+                    #self.client.setCarControls(car_controls)
+                    #time.sleep(2.0)
+                    #self.client.enableApiControl(False)
+                    # Stop the car
+
+                    #requestControl()
+def cll(data):
+    l = DistanceTest()
+    global Done
+    print("CLL:",Done)
+    if data == String("5"):
+        l.throttlePub.publish(0.5)
+        l.steeringPub.publish(-0.75)
+        Done = True
 
 
-                time.sleep(2)
+    '''
+    global Done
+    client = airsim.CarClient()
+    state = client.getCarState()
+    client.confirmConnection() 
+    print(data)
+    if data == String("5"):
+        #print ("ACCESS GRANTED")
+        # STOP THE CAR 
+        car_controls = airsim.CarControls()
+        car_controls.steering = -1 
+        car_controls.throttle = 1
+        client.setCarControls(car_controls)
+        time.sleep(1)
+        Done = True
+    '''
+def control():
+    sub = rospy.Subscriber("controller",String,cll)
 
 
+def requestControl():
+    global pub 
+    # Request Permission to take control over car
+    rospy.init_node('obstacle_avoid')#, anonymous=True)
+    rate = rospy.Rate(1)
+    requestClearance = "5"
+    pub.publish(requestClearance)
 
-def update_controls(controls):
-    global car_controls
-    rospy.loginfo(controls)
-    car_controls.brake = controls.brake
-    car_controls.throttle = controls.throttle
-    car_controls.steering = controls.steering
-    client.setCarControls(car_controls)
-
-
-# CLass for Stop Sign Detection
+# CLass for Obstacle Sign Detection
 def listener():
-
-    rospy.init_node('obstacle_avoid', anonymous=True)
     sensorTest = DistanceTest()
-
     while (True):
         sensorTest.execute()
 
-#    client = airsim.CarClient()
-#    distance_sensor_data = client.getDistanceSensorData(self,"Distance","car")
-
- #   rospy.loginfo("Distance sensor data: {distance_sensor_data}")
-
-  #  time.sleep(1.0)
-
-
-
 if __name__ == "__main__":
     listener()
+
