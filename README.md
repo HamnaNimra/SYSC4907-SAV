@@ -1,4 +1,3 @@
-## SAVE
 ### Simulated Autonomous Vehicle Engine
 
 ### Installation
