@@ -1,0 +1,10 @@
+catkin_ws/devel
+catkin_ws/logs
+catkin_ws/build
+catkin_ws/bin/
+catkin_ws/lib/
+catkin_ws/build_isolated/
+catkin_ws/devel_isolated/
+catkin_ws/*.pyc
+.vs
+.git

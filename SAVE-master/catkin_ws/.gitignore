@@ -1,8 +1,0 @@
-devel/
-logs/
-build/
-bin/
-lib/
-build_isolated/
-devel_isolated/
-*.pyc
