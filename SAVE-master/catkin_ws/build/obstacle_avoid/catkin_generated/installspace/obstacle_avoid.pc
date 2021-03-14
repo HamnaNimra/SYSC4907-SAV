@@ -1,8 +1,0 @@
-prefix=C:/catkin_ws/install
-
-Name: obstacle_avoid
-Description: Description of obstacle_avoid
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

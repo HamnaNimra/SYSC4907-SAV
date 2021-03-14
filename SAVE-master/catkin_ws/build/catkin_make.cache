@@ -1,2 +1,0 @@
-acc;agent;controls;geo_mapping;lka;metrics;object_detect;sensors
--DCMAKE_BUILD_TYPE=RelWithDebInfo -DCATKIN_DEVEL_PREFIX=C:\catkin_ws\devel -DCMAKE_INSTALL_PREFIX=C:\catkin_ws\install -G NMake Makefiles

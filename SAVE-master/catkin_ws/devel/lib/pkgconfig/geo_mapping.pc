@@ -1,8 +1,0 @@
-prefix=C:/catkin_ws/devel
-
-Name: geo_mapping
-Description: Description of geo_mapping
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

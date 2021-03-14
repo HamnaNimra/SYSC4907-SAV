@@ -1,8 +1,0 @@
-prefix=C:/catkin_ws/devel
-
-Name: acc
-Description: Description of acc
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
