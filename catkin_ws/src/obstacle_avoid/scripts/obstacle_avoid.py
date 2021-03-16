@@ -4,7 +4,6 @@ from threading import Semaphore
 from std_msgs.msg import Float64
 from std_msgs.msg import String
 
-
 import rospy
 import airsim
 import numpy

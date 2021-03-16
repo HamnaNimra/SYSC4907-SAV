@@ -15,7 +15,7 @@ import threading
 # ACC Module 4
 # STOP SIGN Detection 3
 # LKA SModule 2
-# Geo-Mapping 1
+# Navigation Module 1
 x = 0
 release = String("0")
 global sub
@@ -43,7 +43,7 @@ def getPermission(i):
     acc_module = String("4")
     stopsign_detection = String("3")
     lka_module = String("2")
-    geo_module = String("1")
+    nav_module = String("1")
     reset = String("11")
     global x  
     global release  
@@ -76,13 +76,13 @@ def getPermission(i):
             key = str(2)
             pub.publish(key)
             print ("Control: LKA")
-    if clearance_level == geo_module:
+    if clearance_level == nav_module:
         if x == 0 and release == String("0"):
             release = String("11")
             x = 1
             key = str(1)
             pub.publish(key)
-            print ("ACCESS SENT GEO Module")
+            print ("ACCESS SENT Navigation Module")
     #print("RELEASE:",release)
     #print("C:", clearance_level)
     #print("RELEASE:",release)
