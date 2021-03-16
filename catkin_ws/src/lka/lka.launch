@@ -10,4 +10,5 @@
 	<node name ="lka" pkg="lka" type="lane_keep.py"/>
 	<node name="car_pose" pkg="sensors" type="car_pose.py" />
 	<node name ="trajectory" pkg="navigation" type="trajectory.py"/>
+	<node name ="waypoint" pkg="navigation" type="waypoint.py"/>
 </launch>

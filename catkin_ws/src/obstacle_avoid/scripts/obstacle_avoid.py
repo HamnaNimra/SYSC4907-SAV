@@ -92,7 +92,7 @@ def cll(data):
     print("CLL:",Done)
     if data == String("5"):
         l.throttlePub.publish(0.5)
-        l.steeringPub.publish(-0.75)
+        l.steeringPub.publish(-0.8)
         Done = True
 
 

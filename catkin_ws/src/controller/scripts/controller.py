@@ -29,14 +29,6 @@ pub = rospy.Publisher("controller",String, queue_size=1)
 
 
 def getPermission(i):
-    '''
-    if i in correctRequest: 
-        request_queue.append(i)
-        clearance_level = max(request_queue)
-        print(clearance_level)
-    else: 
-        clearance_level = i
-    '''
     clearance_level = i
     # This Function will get all the commands and allow control
     obstacle_detection = String("5")
@@ -82,6 +74,8 @@ def getPermission(i):
             x = 1
             key = str(1)
             pub.publish(key)
+            print("KEY:",key)
+            print ("Control: Navigation")
             print ("ACCESS SENT Navigation Module")
     #print("RELEASE:",release)
     #print("C:", clearance_level)
