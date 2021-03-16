@@ -45,16 +45,13 @@ class Navigation:
         self.action = "STRAIGHT"
 
     def set_controls(self):
-        if action == "STRAIGHT":
-            rospy.loginfo(action)
+        if self.action == "STRAIGHT":
             return
-        elif action == "LEFT":
-            rospy.loginfo(action)
+        elif self.action == "LEFT":
             self.throttle = 0.1
             self.steering = -1
             self.brake = 0
-        elif action == "RIGHT":
-            rospy.loginfo(action)
+        elif self.action == "RIGHT":
             self.throttle = 0.1
             self.steering = 1
             self.brake = 0
@@ -130,9 +127,6 @@ def control():
     sub = rospy.Subscriber("controller",String,cll)
 
 # Class for trajectory path planner
-#self.throttlePub.publish(self.throttle)
-#self.brakePub.publish(self.brake)
-#self.steeringPub.publish(self.steering)
 if __name__ == "__main__":
     nav = Navigation()
     #trajectory node
