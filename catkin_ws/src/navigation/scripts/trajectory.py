@@ -27,7 +27,7 @@ class Navigation:
 
         #self.controlPub = rospy.Publisher("request", String, queue_size=1)
         self.waypoint_x = [0, 70, 118.0, 129]
-        self.waypoint_y = [0, 0, 0, -121]
+        self.waypoint_y = [0, 1, 1, 121]
 
         if len(self.waypoint_x) == len(self.waypoint_y) & len(self.waypoint_y) >=2:
             rospy.loginfo("Setting waypoints...")
@@ -37,9 +37,7 @@ class Navigation:
         self.waypoint_Id = 0
         self.waypoint = PoseStamped()
         self.waypoint.header = "waypoints"
-        #Initializing first waypoint
-        self.waypoint.pose.position.x = self.waypoint_x[self.waypoint_Id]
-        self.waypoint.pose.position.y = self.waypoint_y[self.waypoint_Id]
+        
         
 
     #def set_controls(self, action):
@@ -69,7 +67,9 @@ class Navigation:
             return False
         
     def execute(self, pos):
-        
+
+        self.waypoint.pose.position.x = self.waypoint_x[self.waypoint_Id]
+        self.waypoint.pose.position.y = self.waypoint_y[self.waypoint_Id]
         curr_x = int(pos.pose.position.x)
         curr_y = int(pos.pose.position.y)
         self.wp_x = int(self.waypoint.pose.position.x)
@@ -80,7 +80,8 @@ class Navigation:
         rospy.loginfo('wp_x: {} wp_y: {} curr_x: {} curr_y: {}'.format(self.wp_x, self.wp_y, curr_x, curr_y))
         rospy.loginfo('close_x: {} close_y: {}'.format(x_close, y_close))
         if((x_close == True) and (y_close == True)):
-            rospy.loginfo("YAAAS BITCHHH, Goal Reached")
+            rospy.loginfo("Goal Reached")
+
             #if action straight, dont update controls
             #elif right or left
                 #update controls
@@ -90,29 +91,33 @@ class Navigation:
     #    if data ==String("1"):
 
 # Class for trajectory path planner
+
 if __name__ == "__main__":
     nav = Navigation()
     rospy.loginfo("Initializing trajectory node")
     #trajectory node
     rospy.init_node('trajectory', anonymous=True)
     rospy.loginfo("Connecting airsim")
+
     #rospy.loginfo("Initializing trajectory publishers")
+
     # Connect to AirSim
     client = airsim.CarClient()
     client.confirmConnection()
     while not rospy.is_shutdown():
 
+        rospy.Subscriber("airsimPose", PoseStamped, nav.execute)
         # get state of the car
-        car_state = client.getCarState()
-        pos = car_state.kinematics_estimated.position
-        simPose = PoseStamped()
-        simPose.pose.position.x = pos.x_val
-        simPose.pose.position.y = pos.y_val
-        simPose.pose.position.z = pos.z_val
-        simPose.header.stamp = rospy.Time.now()
-        simPose.header.seq = 1
-        simPose.header.frame_id = "simFrame"
-        nav.execute(simPose)
+        #car_state = client.getCarState()
+        #pos = car_state.kinematics_estimated.position
+        #simPose = PoseStamped()
+        #simPose.pose.position.x = pos.x_val
+        #simPose.pose.position.y = pos.y_val
+        #simPose.pose.position.z = pos.z_val
+        #simPose.header.stamp = rospy.Time.now()
+        #simPose.header.seq = 1
+        #simPose.header.frame_id = "simFrame"
+        #nav.execute(simPose)
         rospy.spin()
         #waypoint_x = "[0, 70, 118, 129]"
         #waypoint_y = "[-5, -5, -5, -126]"
