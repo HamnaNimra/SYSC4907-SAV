@@ -5,6 +5,7 @@ from std_msgs.msg import Float64
 from std_msgs.msg import String
 
 
+
 import rospy
 import airsim
 import numpy
@@ -92,8 +93,10 @@ def cll(data):
     global Done
     print("CLL:",Done)
     if data == String("5"):
-        l.throttlePub.publish(0.5)
-        l.steeringPub.publish(-0.75)
+
+        l.throttlePub.publish(0.8)
+        l.steeringPub.publish(-0.8)
+
         Done = True
 
 
