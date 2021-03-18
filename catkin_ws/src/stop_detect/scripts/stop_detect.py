@@ -113,6 +113,7 @@ class DetectStopSign():
                     pub1.publish(reset)
                     print("RESET SET")
 
+
         '''
         text = pytesseract.image_to_string(l)
         rospy.loginfo(text)
@@ -192,6 +193,7 @@ def listener():
     rospy.init_node('object_detect', anonymous=True)
     client = airsim.CarClient()
     client.confirmConnection()
+
     avoid_ped = AvoidPedestrians()
     detect_ped = DetectPedestrians(avoid_ped)
     detect_stop = DetectStopSign()
@@ -204,6 +206,7 @@ def listener():
         #data_car2 = client.getDistanceSensorData(vehicle_name="Car2")
         #rospy.loginfo("Distance sensor data: Car1: {data_car1.distance}, Car2: {data_car2.distance}")
         rate.sleep()
+
 
 if __name__ == "__main__":
     listener()
