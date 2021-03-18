@@ -235,7 +235,6 @@ def airpub():
 
     ## Publishers --------------------------------------------------------------
     # image publishers
-    rgb_pub = rospy.Publisher("airsim/rgb/image_raw", Image, queue_size=1)
     depth_pub = rospy.Publisher("airsim/depth", Image, queue_size=1)
     # camera paramters publisher
     rgb_cam_pub = rospy.Publisher("airsim/camera_info", CameraInfo, queue_size=1)
@@ -267,7 +266,6 @@ def airpub():
         simPose.header.stamp = rospy.Time.now()
         odom_msg.header.stamp = simPose.header.stamp
         camera_info_msg.header.stamp = simPose.header.stamp
-        rgb_msg.header = camera_info_msg.header
         depth_msg.header = camera_info_msg.header
 
         # publish message
@@ -275,9 +273,7 @@ def airpub():
         pose_pub.publish(simPose)
         publish_tf_msg(simPose)
         odom_pub.publish(odom_msg)
-        rgb_cam_pub.publish(camera_info_msg)
         depth_cam_pub.publish(camera_info_msg)
-        rgb_pub.publish(rgb_msg)
         depth_pub.publish(depth_msg)
         
         # log PoseStamped message

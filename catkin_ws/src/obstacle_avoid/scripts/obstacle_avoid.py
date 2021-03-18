@@ -91,7 +91,7 @@ def cll(data):
     global Done
     print("CLL:",Done)
     if data == String("5"):
-        l.throttlePub.publish(0.5)
+        l.throttlePub.publish(0.8)
         l.steeringPub.publish(-0.8)
         Done = True
 

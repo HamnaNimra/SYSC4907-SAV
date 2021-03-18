@@ -19,17 +19,12 @@ class Navigation:
         rospy.loginfo("Initializing trajectory node")
         rospy.init_node('trajectory', anonymous=True)
 
-        #initilizing car controls
-        self.throttle = 0 
-        self.brake = 0
-        self.steering = 0
-
         self.reached = String("Halt")
 
         rospy.loginfo("Initializing trajectory publishers")
         self.waypointPub = rospy.Publisher("waypoint",String,queue_size=1)
-        self.waypoint_x = [0, 70, 118.0, 129]
-        self.waypoint_y = [0, 1, 1, 120]
+        self.waypoint_x = [0, 70, 118, 127, 90, 10, 0]
+        self.waypoint_y = [0, 0, 0, -119, -130, -130, -5]
 
         if len(self.waypoint_x) == len(self.waypoint_y) & len(self.waypoint_y) >=2:
             rospy.loginfo("Setting waypoints...")

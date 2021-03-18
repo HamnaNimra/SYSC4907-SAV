@@ -81,33 +81,37 @@ class DetectStopSign():
         mask = cv.bitwise_or(mask1, mask2)
 
         # Making the Boxes around Area of Interest
-        bluecnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)[-2]
-        blue_area = max(bluecnts, key=cv.contourArea)
-        (x,y,w,h) = cv.boundingRect(blue_area)
-        cv.rectangle(image,(x,y),(x+w, y+h),(0,255,0),2)
+        bluecnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)#[-2]        
+        bluecnts = bluecnts[1] if imutils.is_cv2() else bluecnts[0]
+        if bluecnts is None:
+            bluecnts = []
 
-         # Canny on region of image
-        text = image[y:y+h, x:x+w]
-        a = imutils.resize(text, width=min(85, image.shape[1]))
-        l = cv.Canny(a,100,295)
-        cv.waitKey(5)
-        #cv.imshow(1"Text",l)
-        cv.imshow("Tex",a)
-        avg = np.average(a, axis=0)
-        ac = np.average(avg, axis=0)
-        if ac[0] > 15 and ac[1]>50 and ac[2] > 15 and ac[0] < 30 and ac[1] <70 and ac[2]< 30:
-            requestClearance = "3"
-            pub1 = rospy.Publisher("request",String,queue_size=1)
-            #self.subsumptionPub.publish(requestClearance)
-            pub1.publish(requestClearance)
-            control()
-            print("---------------",Done)
-            time.sleep(3)
-            if Done == True:
-                print("After",Done)
-                reset = str("13")
-                pub1.publish(reset)
-                print("RESET SET")
+        if len(bluecnts) > 0:
+            blue_area = max(bluecnts, key=cv.contourArea)
+            (x,y,w,h) = cv.boundingRect(blue_area)
+            cv.rectangle(image,(x,y),(x+w, y+h),(0,255,0),2)
+             # Canny on region of image
+            text = image[y:y+h, x:x+w]
+            a = imutils.resize(text, width=min(85, image.shape[1]))
+            l = cv.Canny(a,100,295)
+            cv.waitKey(5)
+            #cv.imshow(1"Text",l)
+            cv.imshow("Tex",a)
+            avg = np.average(a, axis=0)
+            ac = np.average(avg, axis=0)
+            if ac[0] > 15 and ac[1]>50 and ac[2] > 15 and ac[0] < 30 and ac[1] <70 and ac[2]< 30:
+                requestClearance = "3"
+                pub1 = rospy.Publisher("request",String,queue_size=1)
+                #self.subsumptionPub.publish(requestClearance)
+                pub1.publish(requestClearance)
+                control()
+                print("---------------",Done)
+                time.sleep(1)
+                if Done == True:
+                    print("After",Done)
+                    reset = str("13")
+                    pub1.publish(reset)
+                    print("RESET SET")
 
         '''
         text = pytesseract.image_to_string(l)
@@ -186,22 +190,20 @@ def listener():
     #global detect_ped 
     #global avoid_ped 
     rospy.init_node('object_detect', anonymous=True)
+    client = airsim.CarClient()
+    client.confirmConnection()
     avoid_ped = AvoidPedestrians()
     detect_ped = DetectPedestrians(avoid_ped)
     detect_stop = DetectStopSign()
     #rospy.Subscriber('airsim/image_raw', Image, detect_ped.detectAndDisplay)
-    rospy.Subscriber('airsim/image_raw', Image, detect_stop.detectAndDisplay)
     #rospy.Subscriber('lka/lanes', Lanes, detect_ped.avoid.get_lines)
-    rospy.spin()
-
-
-    while True:
-        client = airsim.CarClient()
-        client.confirmConnection()
-        data_car1 = client.getDistanceSensorData(vehicle_name="Car1")
-        data_car2 = client.getDistanceSensorData(vehicle_name="Car2")
-        rospy.loginfo("Distance sensor data: Car1: {data_car1.distance}, Car2: {data_car2.distance}")
-    
+    rate = rospy.Rate(5)
+    while not rospy.is_shutdown():
+        rospy.Subscriber('airsim/image_raw', Image, detect_stop.detectAndDisplay)
+        #data_car1 = client.getDistanceSensorData(vehicle_name="Car1")
+        #data_car2 = client.getDistanceSensorData(vehicle_name="Car2")
+        #rospy.loginfo("Distance sensor data: Car1: {data_car1.distance}, Car2: {data_car2.distance}")
+        rate.sleep()
 
 if __name__ == "__main__":
     listener()

@@ -1,4 +1,7 @@
 <launch>
+	<arg name="record_camera" default="true" />
+	<arg name="record_pointcloud" default="false" />
+	
 	<node name="controller" pkg="controller" type="controller.py"/>
 	<node name="agent" pkg="agent" type="reactive_agent.py"/>
 	<node name="raw_image" pkg="sensors" type="car_image_raw.py" />
@@ -11,4 +14,7 @@
 	<node name="car_pose" pkg="sensors" type="car_pose.py" />
 	<node name ="trajectory" pkg="navigation" type="trajectory.py"/>
 	<node name ="waypoint" pkg="navigation" type="waypoint.py"/>
+	<node name ="rviz_pub" pkg="geo_mapping" type="rviz_pub.py"/>
+	<node pkg="rviz" type="rviz" name="rviz" output="log" args="-d $(find geo_mapping)/rviz/default.rviz" />
+	
 </launch>

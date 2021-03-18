@@ -26,8 +26,8 @@ class MoveWP():
         self.steerPub = rospy.Publisher('lka/steering', Float64, queue_size=1)
         self.controlPub = rospy.Publisher("request",String,queue_size=1)
         
-        self.waypoint_x = [0, 70, 118.0, 129]
-        self.waypoint_y = [1, 1, 1, 120]
+        self.waypoint_x = [0, 70, 118, 127, 90, 10, 0]
+        self.waypoint_y = [0, 0, 0, -119, -130, -130, -5]
 
         
         self.waypoint = PoseStamped()
@@ -45,8 +45,6 @@ class MoveWP():
         self.next_wp.pose.position.y = self.waypoint_y[self.i+1]
         self.next_x = (self.next_wp.pose.position.x)
         self.next_y = (self.next_wp.pose.position.y)
-        #initial action
-        self.action = "STRAIGHT"
         
 
     def set_action(self):
@@ -68,15 +66,10 @@ class MoveWP():
         if(((self.wp_x < self.next_x) and (self.wp_y == self.next_y)) or ((self.wp_x == self.next_x) and (self.wp_y < self.next_y))):
             self.action = "STRAIGHT"
         elif((self.wp_x < self.next_x) and (self.wp_y < self.next_y)):
-            self.action = "LEFT"
-            self.throttle = 0.5
-            self.steering = -1
-            self.brake = 0
+            self.action = "LEFT"    
         elif((self.wp_x < self.next_x) and (self.wp_y > self.next_y)):
             self.action = "RIGHT"
-            self.throttle = 0.5
-            self.steering = 1
-            self.brake = 0
+        return self.action
 
     def cll(self, data):
         print("CLL:",self.Done)
@@ -99,6 +92,14 @@ class MoveWP():
                 if self.action == "STRAIGHT":
                     return
                 else:
+                    if self.action == "LEFT":
+                        self.throttle = 0.9
+                        self.steering = -1
+                        self.brake = 0
+                    elif self.action == "RIGHT":
+                        self.throttle = 0.9
+                        self.steering = 1
+                        self.brake = 0
                     rospy.loginfo("turning")
                     requestClearance = "1"
                     self.controlPub.publish(requestClearance)
@@ -120,12 +121,11 @@ def listener():
     #waypoint node
     rospy.loginfo("Initializing waypoint node")
     rospy.init_node('waypoint', anonymous=True)
-    i = 0
     # Connect to AirSim
     rospy.loginfo("Connecting airsim")
     client = airsim.CarClient()
     client.confirmConnection
-    rate = rospy.Rate(15)
+    rate = rospy.Rate(5)
     while not rospy.is_shutdown():
         rospy.loginfo("Waiting")
         rospy.Subscriber("waypoint",String, move.set_controls)
