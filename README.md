@@ -5,10 +5,17 @@
 How to install ROS on Windows:
 http://wiki.ros.org/Installation/Windows
 
+How to intall ROS on Linux (Ubuntu):
+http://wiki.ros.org/melodic/Installation/Ubuntu
+
+How to install ROS on MAC:
+http://wiki.ros.org/kinetic/Installation/OSX/Homebrew/Source
+
 How to use AirSim with ROS:
 https://microsoft.github.io/AirSim/docs/ros/
 
-The `settings.json` in this folder contains camera settings that are needed to use the Lane Keep Assist. The resolution and other camera parameters should not be changed unless the LKA ROS node is changed as well.
+The `settings.json` in this folder contains camera settings that are needed to use the Lane Keep Assist. The resolution and other camera parameters should not be changed unless the LKA ROS node is changed as well
+The `settings.json` also contains settings for Lidar sensor position and its point cloud. The vehicle's starting point in the simulation can also be edited in this file. 
 
 #### Note
 
@@ -111,3 +118,12 @@ The link above also contains information on how to create a launch file to start
 
 ### Troubleshooting
 If you are unable to find the SAVE packages in the windows workspace, please ensure that `ROS_PACKAGE_PATH` in the devel/setup.bat is setup correctly and there are no spaces in the path. Spaces may create issues for users.
+
+
+### Main Files of Interest for on boarding
+Obstacle Avoidance: obstacle_avoid/scripts/obstacle_avoid.py
+Stop Sign Detection: stop_detect/scripts/stop_detect.py 
+Vehicle control request (Subsumption Arch): controller/scripts/controller.py
+Navigation: navigation/
+ACC: acc/scripts/acc.py 
+LKA: lka/scripts/lanedetect.py (Identifys Lanes) and lane_keep.py (Changes steering values)
