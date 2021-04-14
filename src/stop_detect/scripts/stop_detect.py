@@ -20,18 +20,14 @@ from object_avoid import AvoidPedestrians
 from lka.msg import Lane
 from lka.msg import Lanes
 from std_msgs.msg import String
-# CLass for Stop Sign Detection
 
 Done = False
 pub = rospy.Publisher("request/msg",String,queue_size=10)
 
-
 class Dn():
-
     def __init__(self):
         self.brakePub = rospy.Publisher('acc/brake',Float64,queue_size=1)
         self.tPub = rospy.Publisher('acc/throttle',Float64,queue_size=1)
-        #self.subsumptionPub = rospy.Publisher("request",String,queue_size=1)
 
 def cll(data):
     global Done
@@ -49,7 +45,6 @@ class DetectStopSign():
     def __init__(self):
         self.brakePub = rospy.Publisher('acc/brake',Float64,queue_size=1)
         self.tPub = rospy.Publisher('acc/throttle',Float64,queue_size=1)
-        #self.subsumptionPub = rospy.Publisher("request",String,queue_size=1)
 
     def getImage(self, img):
         bridge  = CvBridge()
@@ -81,54 +76,54 @@ class DetectStopSign():
         mask = cv.bitwise_or(mask1, mask2)
 
         # Making the Boxes around Area of Interest
-        bluecnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)[-2]
-        blue_area = max(bluecnts, key=cv.contourArea)
-        (x,y,w,h) = cv.boundingRect(blue_area)
-        cv.rectangle(image,(x,y),(x+w, y+h),(0,255,0),2)
+        bluecnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)#[-2]        
+        bluecnts = bluecnts[1] if imutils.is_cv2() else bluecnts[0]
+        if bluecnts is None:
+            bluecnts = []
 
-         # Canny on region of image
-        text = image[y:y+h, x:x+w]
-        a = imutils.resize(text, width=min(85, image.shape[1]))
-        l = cv.Canny(a,100,295)
-        cv.waitKey(5)
-        #cv.imshow(1"Text",l)
-        cv.imshow("Tex",a)
-        avg = np.average(a, axis=0)
-        ac = np.average(avg, axis=0)
-        if ac[0] > 15 and ac[1]>50 and ac[2] > 15 and ac[0] < 30 and ac[1] <70 and ac[2]< 30:
-            requestClearance = "3"
-            pub1 = rospy.Publisher("request",String,queue_size=1)
-            #self.subsumptionPub.publish(requestClearance)
-            pub1.publish(requestClearance)
-            control()
-            print("---------------",Done)
-            time.sleep(3)
-            if Done == True:
-                print("After",Done)
-                reset = str("13")
-                pub1.publish(reset)
-                print("RESET SET")
+        if len(bluecnts) > 0:
+            blue_area = max(bluecnts, key=cv.contourArea)
+            (x,y,w,h) = cv.boundingRect(blue_area)
+            cv.rectangle(image,(x,y),(x+w, y+h),(0,255,0),2)
+             # Canny on region of image
+            text = image[y:y+h, x:x+w]
+            a = imutils.resize(text, width=min(85, image.shape[1]))
+            l = cv.Canny(a,100,295)
+            cv.waitKey(5)
+            # Uncomment next 2 line for troubleshooting
+            #cv.imshow("Canny",l)
+            #cv.imshow("Text",a)
 
-        '''
-        text = pytesseract.image_to_string(l)
-        rospy.loginfo(text)
-        #print ("___________________________",text)
-        if re.search('[a-zA-Z]', text):
+            # Use line 100 to 110 if running on windows machine else use line 114 to 128
+            avg = np.average(a, axis=0)
+            ac = np.average(avg, axis=0)
+            if ac[0] > 15 and ac[1]>50 and ac[2] > 15 and ac[0] < 30 and ac[1] <70 and ac[2]< 30:
+                requestClearance = "3"
+                pub1 = rospy.Publisher("request",String,queue_size=1)
+                pub1.publish(requestClearance)
+                control()
+                time.sleep(1)
+                if Done == True:
+                    reset = str("13")
+                    pub1.publish(reset)
+
+
+        # Use line 114 to 128 if running on Linux else use line 100 tp 110
+        #text = pytesseract.image_to_string(l)
+        #rospy.loginfo(text)
+        #if re.search('[a-zA-Z]', text):
         #if text:
             # Show Image Processing Results
-            cv.imshow("Text",l)
-            cv.imshow("img_hsv",image)
-            pub = rospy.Publisher("request",String,queue_size=1)
-            requestClearance = "3"
-            pub.publish(requestClearance)
-            control()
-            print("---------------",Done)
-            if Done == True:
-                time.sleep(5)
-                reset = str("13")
-                pub.publish(reset)
-                print("RESET SET")
-'''
+            #cv.imshow("Text",l)
+            #cv.imshow("img_hsv",image)
+            #pub = rospy.Publisher("request",String,queue_size=1)
+            #requestClearance = "3"
+            #pub.publish(requestClearance)
+            #control()
+            #if Done == True:
+                #time.sleep(5)
+                #reset = str("13")
+                #pub.publish(reset)
 
 """
 Class for pedestrian detection 
@@ -182,18 +177,48 @@ class DetectPedestrians():
 
 ## ==============================================================================================================================================================================
 
+
+# Test functions to metrics of the module
+def test_DetectStopSign():
+    # Testing the Functionality of the Detect Stop Sign Function
+    detect_stop = DetectStopSign()
+    detect_stop.detectAndDisplay
+    if detect_stop == True:
+        print("Function worked as Expected")
+    else:
+        print("Function failed")
+
+def test_Subsumption_DetectStopSign():
+    # Unit test the Control Function:
+
+    # Simulatie that a stop sign is detected by module
+    pub = rospy.Publisher("request",String,queue_size=1)
+    requestClearance = "3"
+    pub.publish(requestClearance)
+    control()
+    if Done == True:
+        reset = str("13")
+        pub1.publish(reset)
+        return 0
+    else:
+        return 1
+
+    takeControl = control()
+    if takeControl == 1:
+        print("Exit Code", takeControl)
+        print("Communication with Subsumption worked as expceted")
+    else:
+        print("Exit Code", takeControl)
+        print("Communication with Subsumption FAILED")
+
+
 def listener():
-    #global detect_ped 
-    #global avoid_ped 
     rospy.init_node('object_detect', anonymous=True)
     avoid_ped = AvoidPedestrians()
     detect_ped = DetectPedestrians(avoid_ped)
     detect_stop = DetectStopSign()
-    #rospy.Subscriber('airsim/image_raw', Image, detect_ped.detectAndDisplay)
     rospy.Subscriber('airsim/image_raw', Image, detect_stop.detectAndDisplay)
-    #rospy.Subscriber('lka/lanes', Lanes, detect_ped.avoid.get_lines)
     rospy.spin()
-
 
     while True:
         data_car1 = client.getDistanceSensorData(vehicle_name="Car1")
@@ -204,15 +229,3 @@ def listener():
 
 if __name__ == "__main__":
     listener()
-'''    
-        # Canny on region of image
-        text = image[y:y+h, x:x+w]
-        a = imutils.resize(text, width=min(85, image.shape[1]))
-        l = cv.Canny(a,100,295)
-        # For Detecting the TEXT from the stop sign
-        cv.waitKey(5)
-        # TEMOVE THE COMMENT #
-        text = pytesseract.image_to_string(l) 
-        rospy.loginfo(text)
-   '''
- 

@@ -158,5 +158,5 @@ class ACC:
     """
 
 # test ACC
-acc = ACC(3)
+acc = ACC(8)
 acc.control_speed()

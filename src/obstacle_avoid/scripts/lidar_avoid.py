@@ -1,5 +1,5 @@
 # Python client example to get Lidar data from a car
-#
+# Sample code not being used by the module 
 
 import setup_path 
 import airsim
