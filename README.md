@@ -122,8 +122,13 @@ If you are unable to find the SAVE packages in the windows workspace, please ens
 
 ### Main Files of Interest for on boarding
 Obstacle Avoidance: obstacle_avoid/scripts/obstacle_avoid.py
+
 Stop Sign Detection: stop_detect/scripts/stop_detect.py 
+
 Vehicle control request (Subsumption Arch): controller/scripts/controller.py
+
 Navigation: navigation/
+
 ACC: acc/scripts/acc.py 
+
 LKA: lka/scripts/lanedetect.py (Identifys Lanes) and lane_keep.py (Changes steering values)
