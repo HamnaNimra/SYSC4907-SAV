@@ -1,4 +1,0 @@
-<launch>
-  <node name="acc" pkg="acc" type="acc.py" />
-  <node name="speed" pkg="sensors" type="speedometer.py" />
-</launch>
