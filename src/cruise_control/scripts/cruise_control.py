@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from mapping_navgiation.msg import PathData
+from mapping_navigation.msg import PathData
 
 
 class CruiseControl:
