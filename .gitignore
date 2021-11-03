@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 devel/
 logs/
 build/
@@ -7,7 +6,6 @@ lib/
 build_isolated/
 devel_isolated/
 *.pyc
-=======
 catkin_ws/devel
 catkin_ws/logs
 catkin_ws/build
@@ -18,4 +16,4 @@ catkin_ws/devel_isolated/
 catkin_ws/*.pyc
 .vs
 .git
->>>>>>> 83423b8612b7dd7f30624eabab9811d617bac7ae
+**/airsim/
