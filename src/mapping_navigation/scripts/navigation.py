@@ -2,7 +2,7 @@
 
 import rospy
 from std_msgs.msg import Float64, String
-from geometry_msgs.msgs import PoseStamped
+from geometry_msgs.msg import PoseStamped
 
 
 class Navigation:

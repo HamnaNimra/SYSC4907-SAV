@@ -2,8 +2,9 @@
 
 import rospy
 from std_msgs.msg import Float64, String
-from geometry_msgs.msgs import PoseStamped
-from sensor_msgs.msgs import PointCloud
+from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import PointCloud
+
 
 class LaneKeepAssist:
 
