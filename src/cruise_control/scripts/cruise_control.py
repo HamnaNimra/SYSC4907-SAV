@@ -2,6 +2,8 @@
 
 import rospy
 from mapping_navigation.msg import PathData
+from sensor_msgs.msg import PointCloud
+from std_msgs.msg import Float64
 
 
 class CruiseControl:
@@ -12,6 +14,7 @@ class CruiseControl:
         self.throttlePub = rospy.Publisher("throttling", Float64, queue_size = 10)
 
     def listener(self):
+        rospy.init_node("cruise_control", anonymous=True)
         rospy.Subscriber("lidar", PointCloud, self.handle_lidar_data)
         # Define Path data structure
         rospy.Subscriber("navigation", PathData, self.handle_path_data)
@@ -32,4 +35,8 @@ class CruiseControl:
             rate.sleep()
 
 
-
+if __name__ == "__main__":
+    # Do something
+    cc = CruiseControl()
+    cc.listener()
+    cc.publish_results()
