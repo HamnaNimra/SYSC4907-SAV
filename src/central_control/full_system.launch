@@ -12,4 +12,8 @@
 
   <node name="mapping" pkg="mapping_navigation" type="mapping.py" />
   <node name="navigation" pkg="mapping_navigation" type="navigation.py" />
+
+  <node name="lidar" pkg="sensors" type="lidar.py" />
+  <node name="car_image_raw" pkg="sensors" type="car_image_raw.py" />
+  <node name="car_pose" pkg="sensors" type="car_pose.py" />
 </launch>

@@ -3,7 +3,8 @@
 import rospy
 from std_msgs.msg import Float64, String
 from geometry_msgs.msg import PoseStamped
-from sensor_msgs.msg import PointCloud
+from sensor_msgs.msg import PointCloud, Image
+
 
 
 class LaneKeepAssist:
@@ -16,7 +17,7 @@ class LaneKeepAssist:
 
     def listener(self):
         rospy.init_node('LaneKeepAssist', anonymous=True)
-        rospy.Subscriber("airsim/image_raw", String, self.handle_camera_data)
+        rospy.Subscriber("airsim/image_raw", Image, self.handle_camera_data)
         rospy.Subscriber("carData", String, self.handle_car_data)
         rospy.Subscriber("airsimPose", PoseStamped, self.handle_gps_data)
         rospy.Subscriber("lidar", PointCloud, self.handle_lidar_data)

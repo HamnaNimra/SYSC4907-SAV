@@ -32,7 +32,7 @@ class SignDetector:
         # TODO: implement
 
         # Return no detections
-        return []
+        return DetectionResult()
 
 
 # Give the option to run separately

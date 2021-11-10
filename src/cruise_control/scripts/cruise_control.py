@@ -17,13 +17,13 @@ class CruiseControl:
         rospy.init_node("cruise_control", anonymous=True)
         rospy.Subscriber("lidar", PointCloud, self.handle_lidar_data)
         # Define Path data structure
-        rospy.Subscriber("navigation", PathData, self.handle_path_data)
+        rospy.Subscriber("pathData", PathData, self.handle_path_data)
         rospy.spin()
 
-    def handle_lidar_data(self):
+    def handle_lidar_data(self, data):
         print("Obtained lidar data")
 
-    def handle_path_data(self):
+    def handle_path_data(self, data):
         print("Obtained path data")
 
     def publish_results(self):
