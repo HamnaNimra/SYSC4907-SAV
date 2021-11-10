@@ -13,7 +13,7 @@ class LaneKeepAssist:
     Keeps them lanes
     """
     def __init__(self):
-        self.pub = rospy.Publisher('lka/steering',Float64 ,queue_size=10)
+        self.pub = rospy.Publisher('steering',Float64 ,queue_size=10)
 
     def listener(self):
         rospy.init_node('LaneKeepAssist', anonymous=True)
