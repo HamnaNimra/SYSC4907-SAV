@@ -18,6 +18,7 @@ class Lidar:
         rate = rospy.Rate(2)
         while not rospy.is_shutdown():
             self.lidar_pub.publish(PointCloud())
+            rate.sleep()
 
 if __name__ == '__main__':
     lidar = Lidar()
