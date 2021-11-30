@@ -11,7 +11,7 @@ class CruiseControl:
         self.steeringPub = rospy.Publisher("steering", Float64, queue_size = 10)
         self.brakingPub = rospy.Publisher("braking", Float64, queue_size = 10)
         self.throttlePub = rospy.Publisher("throttling", Float64, queue_size = 10)
-        self.speed: Float64 = 0.0
+        self.speed: float = 0.0
 
     def listener(self):
         rospy.init_node("cruise_control", anonymous=True)
