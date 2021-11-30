@@ -29,9 +29,11 @@ class Navigation:
 
         while not rospy.is_shutdown():
             self.target_ind, _ = self.navigator.search_target_index(self.state)
-            if len(path)-1 > self.target_ind:
+            if len(self.path)-1 > self.target_ind:
                 steering_angle = self.get_steering_angle()
                 self.steering_pub.publish(steering_angle)
+            else:
+                rospy.loginfo("Done route")
 
     def handle_gps_data(self, postition: PoseStamped):
         curr_point = Point((postition.pose.position.x, postition.pose.position.y))
@@ -45,6 +47,7 @@ class Navigation:
     def get_steering_angle(self) -> float:
         ackerman_angle_rad, target_ind = self.navigator.pure_pursuit_steer_control(self.state)
         ackerman_angle_def = math.degrees(ackerman_angle_rad) / 45
+        return ackerman_angle_def
 
 if __name__ == "__main__":
     #Current route stub enter the absolute path to the file here
