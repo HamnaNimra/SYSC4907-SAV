@@ -18,7 +18,7 @@ class State:
     The yaw of the car
     The cars wheel base
     """
-    def __init__(self, wheel_base: float=2.2, point: Point=Point((0,0)), yaw:float=0.0, velocity:float=0.0):
+    def __init__(self, wheel_base: float, point: Point=Point((0,0)), yaw:float=0.0, velocity:float=0.0):
         self.wheel_base = wheel_base
         self.point = point
         self.yaw = yaw
@@ -72,19 +72,19 @@ class PurePursuit:
     """
     def pure_pursuit_steer_control(self, state: State) -> Tuple[float, int]:
         
-        ind, Lf = self.search_target_index(state)
+        index, Lf = self.search_target_index(state)
 
         # Checks to see if the previous found goal points is actually ahead of what it sees now
-        if self.old_steer_target >= ind:
-            ind = self.old_steer_target
+        if self.old_steer_target >= index:
+            index = self.old_steer_target
 
         #Steering angle of the front wheel
-        alpha = math.atan2(self.path[ind].coordinate[1] - state.rear_y, self.path[ind].coordinate[0] - state.rear_x) - state.yaw
+        alpha = math.atan2(self.path[index].coordinate[1] - state.rear_y, self.path[index].coordinate[0] - state.rear_x) - state.yaw
         #Getting the ackerman steering angle, the 1 is to ensure the angle is the correct sign
         delta = math.atan2(2.0 * state.wheel_base * math.sin(alpha) / Lf, 1)
-        self.old_steer_target = ind
+        self.old_steer_target = index
 
-        return delta, ind
+        return delta, index
 
     """
     Finds the next goal point given the cars state.
@@ -98,37 +98,37 @@ class PurePursuit:
             # Mapping though all points in the path, and finding the difference in height and width to that point.
             dx = [state.rear_x - point.coordinate[0] for point in self.path]
             dy = [state.rear_y - point.coordinate[1] for point in self.path]
-            #Getting the minimum hypotenues, aka the nearest point
+            # Getting the minimum hypotenues, aka the nearest point
             #For this firt time set it to the closest point.
-            d = np.hypot(dx, dy)
-            ind = np.argmin(d)
-            self.old_nearest_point_index = ind
+            distances = np.hypot(dx, dy)
+            index = np.argmin(distances)
+            self.old_nearest_point_index = index
         else:
             #Get distance between the nearest point we found last time and the cars current posotiion.
-            ind = self.old_nearest_point_index
-            distance_this_index = state.calc_distance(self.path[ind].coordinate[0], self.path[ind].coordinate[1])
+            index = self.old_nearest_point_index
+            distance_this_index = state.calc_distance(self.path[index].coordinate[0], self.path[index].coordinate[1])
             while True:
                 #Get the distance from the cars current posotion to the next point after the nearest point
-                distance_next_index = state.calc_distance(self.path[ind + 1].coordinate[0], self.path[ind + 1].coordinate[1])
+                distance_next_index = state.calc_distance(self.path[index + 1].coordinate[0], self.path[index + 1].coordinate[1])
                 #If the closest point is still the nearest point we found earlier exit the loop
                 if distance_this_index < distance_next_index:
                     break
                 # If the next next point is actually closer go to that instead and reapeat the calculation
-                ind = ind + 1 if (ind + 1) < len(self.path) else ind
+                index = index + 1 if (index + 1) < len(self.path) else ind
                 distance_this_index = distance_next_index
-            self.old_nearest_point_index = ind
+            self.old_nearest_point_index = index
 
         #Finds where we should actually be looking taking into acound the vehicles current speed
         #look ahead distance=look ahead gain*vehicle forward velocity
-        Lf = self.look_forward_gain * state.velocity + self.look_ahead_distance
+        adjusted_look_forward = self.look_forward_gain * state.velocity + self.look_ahead_distance
 
-        # search look ahead target point index
-        while Lf > state.calc_distance(self.path[ind].coordinate[0], self.path[ind].coordinate[1]):
-            if (ind + 1) >= len(self.path):
-                break  # not exceed goal
-            ind += 1
+        # Check and see if the speed adjusted look forward distance needs a further point
+        while adjusted_look_forward > state.calc_distance(self.path[index].coordinate[0], self.path[index].coordinate[1]):
+            if (index + 1) >= len(self.path):
+                break
+            index += 1
 
-        return ind, Lf
+        return index, adjusted_look_forward
 
 """
 Return yaw in radians from a quaterion

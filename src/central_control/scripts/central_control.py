@@ -26,9 +26,10 @@ class CentralControl:
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
         rospy.Subscriber("sign_detection", DetectionResult, self.handle_sign_recognition)
 
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(100)
         while not rospy.is_shutdown():
             self.client.setCarControls(self.car_controls)
+            rate.sleep()
 
 
     def control(self):
