@@ -9,6 +9,7 @@
   <node name="sign_detect" pkg="sign_car_recognition" type="sign_detect.py" />
 
   <node name="cruise_control" pkg="cruise_control" type="cruise_control.py" />
+  <node name="speedometer" pkg="sensors" type="speedometer.py" />
 
   <node name="mapping" pkg="mapping_navigation" type="mapping.py" />
   <node name="navigation" pkg="mapping_navigation" type="navigation.py" />
