@@ -1,0 +1,20 @@
+<launch>
+  <arg name="host" default="localhost" />
+  <param name="/host_ip" type="string" value="$(arg host)" /> <!-- set global host_ip param -->
+
+  <node name="central_control" pkg="central_control" type="central_control.py" />
+  <node name="lane_keep_assist" pkg="lane_keep_assist" type="lane_keep_assist.py" />
+
+  <node name="car_detect" pkg="sign_car_recognition" type="car_detect.py" />
+  <node name="sign_detect" pkg="sign_car_recognition" type="sign_detect.py" />
+
+  <node name="cruise_control" pkg="cruise_control" type="cruise_control.py" />
+  <node name="speedometer" pkg="sensors" type="speedometer.py" />
+
+  <node name="mapping" pkg="mapping_navigation" type="mapping.py" />
+  <node name="navigation" pkg="mapping_navigation" type="navigation.py" />
+
+  <node name="lidar" pkg="sensors" type="lidar.py" />
+  <node name="car_image_raw" pkg="sensors" type="car_image_raw.py" />
+  <node name="car_pose" pkg="sensors" type="car_pose.py" />
+</launch>

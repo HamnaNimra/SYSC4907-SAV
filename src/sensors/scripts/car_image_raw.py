@@ -23,9 +23,9 @@ def airpub():
          # get camera images from the car
         responses = client.simGetImages([
             airsim.ImageRequest("1", airsim.ImageType.Scene, False, False)])  #scene vision image in uncompressed RGB array
-
+            
         for response in responses:
-            img_rgb_string = response.image_data_uint8
+           img_rgb_string = response.image_data_uint8
 
         # Populate image message
         msg=Image() 
