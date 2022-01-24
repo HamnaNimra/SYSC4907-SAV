@@ -40,7 +40,8 @@ class CruiseControl:
         self.speed = speed.data
 
     def publish_results(self):
-        self.steeringPub.publish(1)
+        #Just so it does not mess with the data
+        #self.steeringPub.publish(1)
         self.brakingPub.publish(1)
 
         if self.speed < 5:
