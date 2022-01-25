@@ -17,3 +17,4 @@ catkin_ws/*.pyc
 .vs
 .git
 **/airsim/
+src/cruise_control/scripts/speed_output.txt

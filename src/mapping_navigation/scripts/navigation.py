@@ -34,6 +34,7 @@ class Navigation:
                 self.steering_pub.publish(steering_angle)
             else:
                 rospy.loginfo('Done route')
+                rospy.sigal_shutdown("Done route")
             rate.sleep()
 
     def handle_gps_data(self, position: PoseStamped):
