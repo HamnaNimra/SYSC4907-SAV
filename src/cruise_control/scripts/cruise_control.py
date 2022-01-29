@@ -23,7 +23,7 @@ class CruiseControl:
         self.lastTime = time.time()
 
         # Used for automated testing
-        self.outputSpeedFile = open(os.path.abspath(os.path.dirname(__file__)) + "/speed_output.txt", "w")
+        self.outputSpeedFile = open("speed_output.txt", "w")
 
     def listener(self):
         rospy.init_node("cruise_control", anonymous=True)
@@ -48,7 +48,6 @@ class CruiseControl:
         print("Obtained path data")
 
     def handle_speed_data(self, speed: Float64):
-        rospy.loginfo("Handling the speed data")
         self.currentSpeed = speed.data
 
     def publish_results(self):
