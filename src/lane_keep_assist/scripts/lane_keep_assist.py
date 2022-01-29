@@ -5,6 +5,7 @@ import lane_turn
 from std_msgs.msg import Float64, String
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import PointCloud, Image
+from mapping_navigation.msg import Steer
 
 
 class LaneKeepAssist:
@@ -13,7 +14,8 @@ class LaneKeepAssist:
     """
 
     def __init__(self):
-        self.steering_pub = rospy.Publisher('steering', Float64, queue_size=10)
+        #self.steering_pub = rospy.Publisher('steering', Float64, queue_size=10)
+        self.steering_pub_test = rospy.Publisher('steering_test', Steer, queue_size=10)
         self.lanes = None
         self.new_steering_input = 0
         self.curr_steering_input = 0
@@ -43,7 +45,11 @@ class LaneKeepAssist:
 
             rospy.loginfo(f'Steering angle {self.new_steering_input}')
             rospy.loginfo(f'Lanes {self.lanes}')
-            self.steering_pub.publish(self.new_steering_input)
+            # self.steering_pub.publish(self.new_steering_input)
+            steering_message = Steer()
+            steering_message.angle = self.new_steering_input
+            steering_message.system = 'LKA'
+            self.steering_pub_test.publish(steering_message)
             rate.sleep()
 
     # Handles the camera data

@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseStamped
 from pure_pursuit import *
 from std_msgs.msg import Float64
 from path_helpers import *
+from mapping_navigation.msg import Steer
 
 
 class Navigation:
@@ -14,7 +15,8 @@ class Navigation:
     """
 
     def __init__(self, path: List[Point], look_ahead_distance: float, look_forward_gain: float, wheel_base: float):
-        self.steering_pub = rospy.Publisher('steering', Float64, queue_size=10)
+        #self.steering_pub = rospy.Publisher('steering', Float64, queue_size=10)
+        self.steering_pub_test = rospy.Publisher('steering_test', Steer, queue_size=10)
         self.path = path
         self.target_index = 0
         self.navigator = PurePursuit(look_ahead_distance, look_forward_gain, path)
@@ -31,7 +33,11 @@ class Navigation:
         while not rospy.is_shutdown():
             if len(self.path) - 1 > self.target_index:
                 steering_angle = self.get_steering_angle()
-                self.steering_pub.publish(steering_angle)
+                #self.steering_pub.publish(steering_angle)
+                steering_message = Steer()
+                steering_message.angle = steering_angle
+                steering_message.system = 'NAV'
+                self.steering_pub_test.publish(steering_message)
             else:
                 rospy.loginfo('Done route')
             rate.sleep()

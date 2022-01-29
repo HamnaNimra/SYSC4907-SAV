@@ -2,12 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="68771610-c40b-4a3c-9c73-15f3d73cbc4c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/lane_keep_assist/scripts/lane_detect.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/lane_keep_assist/scripts/lane_turn.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/central_control/full_system.launch" beforeDir="false" afterPath="$PROJECT_DIR$/src/central_control/full_system.launch" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/central_control/scripts/central_control.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/central_control/scripts/central_control.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cruise_control/scripts/cruise_control.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/cruise_control/scripts/cruise_control.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lane_keep_assist/scripts/lane_keep_assist.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/lane_keep_assist/scripts/lane_keep_assist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mapping_navigation/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/mapping_navigation/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mapping_navigation/scripts/coords.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/mapping_navigation/scripts/coords.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/mapping_navigation/scripts/navigation.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/mapping_navigation/scripts/navigation.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
