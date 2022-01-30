@@ -12,6 +12,7 @@ class CruiseControl:
         self.brakingPub = rospy.Publisher("braking", Float64, queue_size = 10)
         self.throttlePub = rospy.Publisher("throttling", Float64, queue_size = 10)
         self.speed: float = 0.0
+        self.limit = 5
 
     def listener(self):
         rospy.init_node("cruise_control", anonymous=True)
@@ -44,7 +45,7 @@ class CruiseControl:
         #self.steeringPub.publish(1)
         self.brakingPub.publish(1)
 
-        if self.speed < 5:
+        if self.speed < self.limit:
             # If throttle is too low then car will not go above a certain speed (at least if road is
             # uphill). This value might have to change as a result
             self.throttlePub.publish(0.5)
