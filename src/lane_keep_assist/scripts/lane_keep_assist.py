@@ -34,12 +34,16 @@ class LaneKeepAssist:
     def handle_camera_data(self, image):
         self.lane_state = lane_turn.process_image(image)
 
+        # Two lanes
         if self.lane_state == 1:
             rospy.loginfo("Two Lanes")
+        # One lane Off left
         elif self.lane_state == 2:
             rospy.loginfo("One Lane")
+        # One lane off right
         elif self.lane_state == 3:
             rospy.loginfo("One Lane")
+        # No lanes
         elif self.lane_state == 4:
             rospy.loginfo("No Lanes")
 
