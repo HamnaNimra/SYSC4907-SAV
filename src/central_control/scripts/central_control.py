@@ -14,7 +14,7 @@ class CentralControl:
     def __init__(self):
         host_ip = rospy.get_param('/host_ip')
 
-        self.client = airsim.CarClient(ip = host_ip)
+        self.client = airsim.CarClient(ip=host_ip)
         self.client.confirmConnection()
         self.client.enableApiControl(True)
         self.car_controls = airsim.CarControls()

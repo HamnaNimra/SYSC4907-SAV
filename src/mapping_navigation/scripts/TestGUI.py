@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 import tkinter as tk
 from enum import Enum
 import MapSerializer as MS
+import PIL
 from PIL import ImageTk, Image
 from Models import RoadSegment, RoadSegmentType, MapModel, Lane, Connection, Path, Point
 import os
@@ -448,7 +450,7 @@ window.title("Map creator")
 init_menu_bar()
 
 # Canvas
-img = ImageTk.PhotoImage(Image.open('Mapping/NH_Top.png'))
+img = ImageTk.PhotoImage(Image.open('NH_Top.png'))
 h = img.height()
 w = img.width()
 

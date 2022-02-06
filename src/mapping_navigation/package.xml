@@ -51,6 +51,10 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
+  <build_depend>python3-pil</build_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <build_depend>python-imaging-imagetk</build_depend>
+  <exec_depend>python-imaging-imagetk</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
