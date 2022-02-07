@@ -67,6 +67,7 @@ class CruiseControl:
 
         self.outputSpeedFile.write("{},{}\n".format(delta_time, self.currentSpeed))
 
+
 if __name__ == "__main__":
     # Do something
     cc = CruiseControl()

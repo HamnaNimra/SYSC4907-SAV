@@ -1,5 +1,8 @@
 string type
-int32 x1
-int32 y1
-int32 x2
-int32 y2
+float32 xmin
+float32 ymin
+float32 xmax
+float32 ymax
+float32 confidence
+int32 class_num
+string name

@@ -5,6 +5,9 @@ import os
 from sensor_msgs.msg import Image
 
 
+# Note: This class is not used for now, the car and sign detection is done by the same node for now...
+# The commented out code is kept here for future reference. If we need to train our own custom model in the future
+# we will have to load it like this.
 class YoloDetector:
     def __init__(self):
         # Do the setup first

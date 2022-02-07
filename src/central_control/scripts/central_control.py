@@ -2,7 +2,7 @@
 
 import rospy
 import airsim
-from sign_car_recognition.msg import DetectionResult
+from sign_car_recognition.msg import DetectionResult, DetectionResults
 from std_msgs.msg import Float64
 
 
@@ -24,7 +24,7 @@ class CentralControl:
         rospy.Subscriber("steering", Float64, self.handle_steering_data)
         rospy.Subscriber("braking", Float64, self.handle_breaking_data)
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
-        rospy.Subscriber("sign_detection", DetectionResult, self.handle_sign_recognition)
+        rospy.Subscriber("sign_detection", DetectionResults, self.handle_sign_recognition)
 
         rate = rospy.Rate(100)
         while not rospy.is_shutdown():
@@ -46,7 +46,7 @@ class CentralControl:
         print("Obtained throttling data")
         self.car_controls.throttle = throttling_data.data
 
-    def handle_sign_recognition(self, sign_data):
+    def handle_sign_recognition(self, detection_results):
         print("Obtained sign recognition data")
 
 
