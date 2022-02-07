@@ -3,7 +3,7 @@
 import rospy
 import airsim
 from sign_car_recognition.msg import DetectionResult
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Float64MultiArray
 
 
 class CentralControl:
@@ -25,6 +25,7 @@ class CentralControl:
         rospy.Subscriber("braking", Float64, self.handle_breaking_data)
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
         rospy.Subscriber("sign_detection", DetectionResult, self.handle_sign_recognition)
+        rospy.Subscriber("lidar_data", Float64MultiArray, self.handle_lidar_detection)
 
         rate = rospy.Rate(100)
         while not rospy.is_shutdown():
@@ -34,6 +35,9 @@ class CentralControl:
 
     def control(self):
         print("Control loop")
+
+    def handle_lidar_detection(self, lidar_data: Float64MultiArray):
+        pass
 
     def handle_steering_data(self, steering_data):
         print("Obtained steering data")
