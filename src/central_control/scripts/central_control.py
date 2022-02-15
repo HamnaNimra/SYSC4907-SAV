@@ -27,8 +27,9 @@ class CentralControl:
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
         rospy.Subscriber("sign_detection", DetectionResult, self.handle_sign_recognition)
 
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(100)
         while not rospy.is_shutdown():
+            self.client.setCarControls(self.car_controls)
             rate.sleep()
 
     def control(self):
@@ -36,14 +37,14 @@ class CentralControl:
 
     def handle_steering_data(self, steering_data):
         print("Obtained steering data")
+        self.car_controls.steering = steering_data.data
 
     def handle_breaking_data(self, braking_data):
         print("Obtained braking data")
 
     def handle_throttling_data(self, throttling_data: Float64):
         print("Obtained throttling data")
-        # self.car_controls.throttle = throttling_data.data
-        # self.client.setCarControls(self.car_controls)
+        self.car_controls.throttle = throttling_data.data
 
     def handle_sign_recognition(self, sign_data):
         print("Obtained sign recognition data")

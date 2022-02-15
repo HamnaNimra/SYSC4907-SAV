@@ -11,7 +11,7 @@ class DirEnum(Enum):
 
 
 class Point:
-    def __init__(self, coordinate: Tuple[int, int], intersection_id: int = None):
+    def __init__(self, coordinate: Tuple[float, float], intersection_id: int = None):
         self.coordinate = coordinate
         self.intersection_id = intersection_id
 

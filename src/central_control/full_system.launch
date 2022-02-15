@@ -12,7 +12,9 @@
   <node name="speedometer" pkg="sensors" type="speedometer.py" />
 
   <node name="mapping" pkg="mapping_navigation" type="mapping.py" />
-  <node name="navigation" pkg="mapping_navigation" type="navigation.py" />
+   <!-- Making navigation node required results in ROS shutting down after the entire path has been navigated.
+        This is needed for automated testing. -->
+  <node name="navigation" pkg="mapping_navigation" type="navigation.py" required = "true"/>
 
   <node name="lidar" pkg="sensors" type="lidar.py" />
   <node name="car_image_raw" pkg="sensors" type="car_image_raw.py" />
