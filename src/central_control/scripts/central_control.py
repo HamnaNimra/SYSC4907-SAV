@@ -15,19 +15,20 @@ class CentralControl:
     def __init__(self):
         host_ip = rospy.get_param('/host_ip')
 
-        self.client = airsim.CarClient()
+        self.client = airsim.CarClient(ip = host_ip)
         self.client.confirmConnection()
-        # self.client.enableApiControl(True)
-        # self.car_controls = airsim.CarControls()
+        self.client.enableApiControl(True)
+        self.car_controls = airsim.CarControls()
 
     def listen(self):
         rospy.init_node("central_control", anonymous=True)
-        rospy.Subscriber("lane_status", LaneStatus, self.handle_steering_data)
+        rospy.Subscriber("lane_info", LaneStatus, self.handle_lane_data)
+        rospy.Subscriber("steering", Float64, self.handle_steering_data)
         rospy.Subscriber("braking", Float64, self.handle_breaking_data)
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
         rospy.Subscriber("sign_detection", DetectionResult, self.handle_sign_recognition)
 
-        rate = rospy.Rate(100)
+        rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             self.client.setCarControls(self.car_controls)
             rate.sleep()
@@ -48,6 +49,11 @@ class CentralControl:
 
     def handle_sign_recognition(self, sign_data):
         print("Obtained sign recognition data")
+
+    def handle_lane_data(self, lane_data):
+        print("Obtained lane data")
+        rospy.loginfo(f"{lane_data.lane_info}")
+
 
 
 if __name__ == "__main__":
