@@ -25,7 +25,7 @@ class LaneKeepAssist:
         rospy.Subscriber("airsim/image_raw", Image, self.handle_camera_data)
         rospy.Subscriber("segmented_image", Image, self.handle_segmented_image)
 
-        rate = rospy.Rate(2)
+        rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.image is not None and self.segmented_image is not None:
                 self.process()
