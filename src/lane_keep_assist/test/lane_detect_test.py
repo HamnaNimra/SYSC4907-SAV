@@ -3,6 +3,7 @@ import numpy as np
 from scripts.lane_detect import *
 import os
 import json
+import re
 from typing import List, Tuple
 
 
@@ -26,22 +27,24 @@ def measure_detect():
 
 
 # Gets the images defined in the json file from the test images file
-def get_images() -> List[Tuple[np.ndarray, np.ndarray]]:
-    images = []
+def get_images() -> List[List[np.ndarray]]:
     file_path = os.path.abspath(os.path.dirname(__file__))
     path, _ = os.path.split(file_path)
     image_folder_path = os.path.join(path, "test_images")
-    image_json_path = os.path.join("test", "test.json")
-    json_file_full_path = os.path.join(path, image_json_path)
+    original_image_folder = os.path.join(image_folder_path, "original")
+    annotated_image_folder = os.path.join(image_folder_path, "annotated")
 
-    with open(json_file_full_path, "r") as file:
-        test_set = json.load(file)
-        for image_set in test_set["test_images"]:
-            main_img = cv.imread(os.path.join(image_folder_path, image_set["image"]))
-            annotated_img = cv.imread(os.path.join(image_folder_path, image_set["annotated_image"]))
-            images.append((main_img, annotated_img))
+    images = {}
+    for file in os.listdir(original_image_folder):
+        result = re.search('[o]+[_]+(\d*)', file)
+        number = int(result.group(1))
+        images[number] = [cv.imread(os.path.join(original_image_folder, file))]
 
-    return images
+    for file in os.listdir(annotated_image_folder):
+        result = re.search('[a]+[_]+(\d*)', file)
+        number = int(result.group(1))
+        images[number].append(cv.imread(os.path.join(annotated_image_folder, file)))
+    return list(images.values())
 
 
 # Gets just the annotation from the image

@@ -1,1 +1,3 @@
 int8 lane_info
+int8 road_info
+float64 percent_diff

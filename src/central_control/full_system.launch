@@ -17,4 +17,5 @@
   <node name="lidar" pkg="sensors" type="lidar.py" />
   <node name="car_image_raw" pkg="sensors" type="car_image_raw.py" />
   <node name="car_pose" pkg="sensors" type="car_pose.py" />
+  <node name="segmented_image" pkg="sensors" type="segmented_image.py" />
 </launch>

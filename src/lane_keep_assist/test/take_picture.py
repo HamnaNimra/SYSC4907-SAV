@@ -2,6 +2,7 @@ import numpy as np
 import airsim
 import os
 
+
 # Just a fn to take to a picture and save it while using airsim
 def take_picture(filename):
     client = airsim.CarClient()
