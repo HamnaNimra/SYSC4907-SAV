@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import setup_path 
 import airsim
@@ -16,8 +16,9 @@ def airpub():
     rospy.init_node('airpub', anonymous=True)
     rate = rospy.Rate(10) # 10hz
 
-    # connect to the AirSim simulator 
-    client = airsim.CarClient()
+    # connect to the AirSim simulator
+    host_ip = rospy.get_param('/host_ip')
+    client = airsim.CarClient(ip=host_ip)
     client.confirmConnection()
 
 #    start = time.time()
