@@ -5,7 +5,8 @@
   <node name="central_control" pkg="central_control" type="central_control.py" />
   <node name="lane_keep_assist" pkg="lane_keep_assist" type="lane_keep_assist.py" />
 
-  <node name="car_detect" pkg="sign_car_recognition" type="car_detect.py" />
+<!-- We're not using this node for now because the sign and car recognition are the same node for now -->
+<!--   <node name="car_detect" pkg="sign_car_recognition" type="car_detect.py" /> -->
   <node name="sign_detect" pkg="sign_car_recognition" type="sign_detect.py" />
 
   <node name="cruise_control" pkg="cruise_control" type="cruise_control.py" />

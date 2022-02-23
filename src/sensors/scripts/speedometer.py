@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import setup_path 
 import airsim
@@ -13,7 +13,8 @@ def speedometer():
     rate = rospy.Rate(30) # 30 Hz
 
     # connect to the AirSim simulator 
-    client = airsim.CarClient()
+    host_ip = rospy.get_param('/host_ip')
+    client = airsim.CarClient(ip=host_ip)
     client.confirmConnection()
 
     while not rospy.is_shutdown():
