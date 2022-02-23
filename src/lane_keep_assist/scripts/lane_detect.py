@@ -5,8 +5,8 @@ import math
 from typing import List, Tuple
 
 HOUGH_MIN_VOTES = 50
-HOUGH_MIN_LINE_LENGTH = 50
-HOUGH_MAX_LINE_GAP = 15
+HOUGH_MIN_LINE_LENGTH = 60
+HOUGH_MAX_LINE_GAP = 10
 
 CANNY_MIN_THRESHOLD = 150
 CANNY_MAX_THRESHOLD = 200
@@ -197,22 +197,26 @@ def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
     segmented_lane_lines = average_slope_intercept(cv_img, hough_segmented)
     hls_lane_lines = average_slope_intercept(cv_img, hough_hls)
 
-    # Saved for live visualization assumes two lanes
-    for line in hough_gradient:
-        for x1, y1, x2, y2 in line:
-            fit = np.polyfit((x1, x2), (y1, y2), 1)
-            slope = fit[0]
-            if 0.1 > slope > -0.1:
-                continue
-            cv.line(cv_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-
-    if gradient_lane_lines:
-        coord1, coord2, coord3, coord4 = gradient_lane_lines[0][0]
-        cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
-
-        coord1, coord2, coord3, coord4 = gradient_lane_lines[1][0]
-        cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
-    cv.imshow("demo", cv_img)
-    cv.waitKey(1)
+    # # Saved for live visualization assumes two lanes
+    # try:
+    #     for line in hough_gradient:
+    #         for x1, y1, x2, y2 in line:
+    #             fit = np.polyfit((x1, x2), (y1, y2), 1)
+    #             slope = fit[0]
+    #             if 0.1 > slope > -0.1:
+    #                 continue
+    #             cv.line(cv_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    #
+    #     if gradient_lane_lines:
+    #         coord1, coord2, coord3, coord4 = gradient_lane_lines[0][0]
+    #         cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
+    #
+    #         coord1, coord2, coord3, coord4 = gradient_lane_lines[1][0]
+    #         cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
+    #     cv.imshow("masked", masked_hls)
+    #     cv.imshow("demo", cv_img)
+    #     cv.waitKey(1)
+    # except IndexError as e:
+    #     print(e)
 
     return gradient_lane_lines, hls_lane_lines, segmented_lane_lines, road_colour

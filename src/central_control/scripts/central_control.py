@@ -30,7 +30,7 @@ class CentralControl:
 
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
-            # self.client.setCarControls(self.car_controls)
+            self.client.setCarControls(self.car_controls)
             rate.sleep()
 
     def control(self):
@@ -52,7 +52,7 @@ class CentralControl:
 
     def handle_lane_data(self, lane_data):
         print("Obtained lane data")
-        rospy.loginfo(f"{lane_data.lane_gradient_status}")
+        rospy.loginfo(f"{lane_data.gradient_lanes}")
 
 
 
