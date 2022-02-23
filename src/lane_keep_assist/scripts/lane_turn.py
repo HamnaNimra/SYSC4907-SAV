@@ -11,9 +11,9 @@ from cv_bridge import CvBridge, CvBridgeError
 
 # Returns the results of both detection methods lane and approximate road boundaries
 # Returns the percent difference between the two methods detection if they agree on what type of detection
-# Returns the slopes of the two lines if they agree with each other, otherwise returns NAN
+# Returns the coordinates of the two lines
 # Returns the current majority segment found in the segmentation image by the sum of the RGB value
-def lane_interpret(img: np.ndarray, segmented_img: np.ndarray) -> Tuple[int, int, float, Tuple[float, float], int]:
+def lane_interpret(img: np.ndarray, segmented_img: np.ndarray):
     bridge = CvBridge()
     height = img.height
 
@@ -23,67 +23,30 @@ def lane_interpret(img: np.ndarray, segmented_img: np.ndarray) -> Tuple[int, int
             cv_segmented_img = bridge.imgmsg_to_cv2(segmented_img, desired_encoding="passthrough")
 
             # Get a result from both the normal camera image and the segmentation image
-            lane_lines, road_bounds, road_colour = lane_detect.lane_detect(cv_img, cv_segmented_img)
+            gradient_lanes, hls_lanes, segmentation_lanes, road_colour = lane_detect.lane_detect(cv_img, cv_segmented_img)
 
             # Get the lane results
-            lane_result = lane_type(lane_lines, height)
-            road_results = lane_type(road_bounds, height)
+            gradient_result = lane_type(gradient_lanes, height)
+            hls_result = lane_type(hls_lanes, height)
+            segmentation_result = lane_type(segmentation_lanes, height)
 
-            # If there is two lanes
-            if lane_result == 1:
-                if lane_result == road_results:
+            # Get the percent differences for the detections
+            gradient_difference = compare_lanes(gradient_lanes, segmentation_lanes, gradient_result,
+                                                segmentation_result)
+            hls_difference = compare_lanes(hls_lanes, segmentation_lanes, hls_result, segmentation_result)
 
-                    # Get the slopes of each lane detection
-                    left_lane_x1, left_lane_y1, left_lane_x2, left_lane_y2 = lane_lines[0][0]
-                    right_lane_x1, right_lane_y1, right_lane_x2, right_lane_y2 = lane_lines[1][0]
-
-                    left_road_x1, left_road_y1, left_road_x2, left_road_y2 = road_bounds[0][0]
-                    right_road_x1, right_road_y1, right_road_x2, right_road_y2 = road_bounds[1][0]
-
-                    # Get the slopes of each lane detection and the average between the two lanes
-                    left_lane_slope = math.atan2((left_lane_x2 - left_lane_x1), (left_lane_y2 - left_lane_y1))
-                    right_lane_slope = math.atan2((right_lane_x2 - right_lane_x1), (right_lane_y2 - right_lane_y1))
-                    avg_lane_slope = (left_lane_slope + right_lane_slope) / 2
-
-                    left_road_slope = math.atan2((left_road_x2 - left_road_x1), (left_road_y2 - left_road_y1))
-                    right_road_slope = math.atan2((right_road_x2 - right_road_x1), (right_road_y2 - right_road_y1))
-                    avg_road_slope = (left_road_slope + right_road_slope) / 2
-
-                    try:
-                        # Calculate the percent difference between the lane and road
-                        percent_diff = abs((avg_lane_slope - avg_road_slope) / avg_road_slope)
-                        return lane_result, road_results, percent_diff, (avg_lane_slope, avg_road_slope), road_colour
-                    # One of the slopes could be zero or close to it,
-                    except ZeroDivisionError as e:
-                        return lane_result, road_results, 1, (avg_lane_slope, avg_road_slope), road_colour
-                else:
-                    return lane_result, road_results, 1, ('NAN', 'NAN'), road_colour
-
-            # If there is only one lane
-            elif lane_result == 2 or lane_result == 3:
-                if lane_result == road_results:
-                    lane_x1, lane_y1, lane_x2, lane_y2 = lane_lines[0][0]
-                    lane_slope = math.atan2((lane_x2 - lane_x1), (lane_y2 - lane_y1))
-
-                    road_x1, road_y1, road_x2, road_y2 = road_bounds[0][0]
-                    road_slope = math.atan2((road_x2 - road_x1), (road_y2 - road_y1))
-
-                    try:
-                        percent_diff = abs((lane_slope - road_slope) / road_slope)
-                        return lane_result, road_results, percent_diff, (lane_slope, road_slope), road_colour
-                    except ZeroDivisionError as e:
-                        return lane_result, road_results, 1, (avg_lane_slope, avg_road_slope), road_colour
-
-                # No lanes detected
-                else:
-                    return lane_result, road_results, 1, ('NAN', 'NAN'), road_colour
-            else:
-                return lane_result, road_results, 0, ('NAN', 'NAN'), road_colour
+            return ((gradient_result, hls_result, segmentation_result), (gradient_difference, hls_difference),
+                    (format_lanes(gradient_lanes), format_lanes(hls_lanes), format_lanes(segmentation_lanes)), road_colour)
 
         except CvBridgeError as e:
-            return 4, 4, 0, ('NAN', 'NAN'), 0
+            return (4, 4, 4), (1, 1), ([], [], []), 1
 
 
+# Returns the type of lane detection
+# 1 is two lanes
+# 2 is one lane off to the left
+# 3 is one lane off to the right
+# 4 is no lanes
 def lane_type(lines, height):
     if lines:
         if len(lines) == 2:
@@ -101,3 +64,71 @@ def lane_type(lines, height):
                 return 3
     else:
         return 4
+
+
+# Get the percentage difference between the two lane detections
+# lanes_1 and lanes_2 are both detections, lanes_2 is a "ground truth"
+def compare_lanes(lanes_1, lanes_2, lane_detection1, lane_detection2) -> List[float]:
+    # If there is two lanes
+    if lane_detection1 == 1:
+        # If the lanes are the same get the percent difference
+        if lane_detection1 == lane_detection2:
+
+            # Get the slopes of each lane detection
+            left_lane1_x1, left_lane1_y1, left_lane1_x2, left_lane1_y2 = lanes_1[0][0]
+            right_lane1_x1, right_lane1_y1, right_lane1_x2, right_lane1_y2 = lanes_1[1][0]
+
+            left_lane2_x1, left_lane2_y1, left_lane2_x2, left_lane2_y2 = lanes_2[0][0]
+            right_lane2_x1, right_lan2_y1, right_lane2_x2, right_lane2_y2 = lanes_2[1][0]
+
+            # Get the slopes of each lane detection and the average between the two lanes
+            left_lane1_slope = (left_lane1_y2 - left_lane1_y1) / (left_lane1_x2 - left_lane1_x1)
+            right_lane1_slope = (right_lane1_y2 - right_lane1_y1) / (right_lane1_x2 - right_lane1_x1)
+
+            left_lane2_slope = (left_lane2_y2 - left_lane2_y1) / (left_lane2_x2 - left_lane2_x1)
+            right_lane2_slope = (right_lane2_y2 - right_lan2_y1) / (right_lane2_x2 - right_lane2_x1)
+
+            try:
+                # Calculate the percent difference between the lane and road
+                percent_diff_left = abs((left_lane1_slope - left_lane2_slope) / left_lane2_slope)
+                percent_diff_right = abs((right_lane1_slope - right_lane2_slope) / right_lane2_slope)
+
+                return [percent_diff_left, percent_diff_right]
+            # One of the slopes could be zero or close to it,
+            except ZeroDivisionError as e:
+                return [1]
+        else:
+            return [1]
+
+    # If there is only one lane
+    elif lane_detection1 == 2 or lane_detection1 == 3:
+        if lane_detection1 == lane_detection2:
+
+            lane1_x1, lane1_y1, lane1_x2, lane1_y2 = lanes_1[0][0]
+            lane1_slope = (lane1_y2 - lane1_y1) / (lane1_x2 - lane1_x1)
+
+            lane2_x1, lane2_y1, lane2_x2, lane2_y2 = lanes_2[0][0]
+            lane2_slope = (lane2_y2 - lane2_y1) / (lane2_x2 - lane2_x1)
+
+            try:
+                percent_diff = abs((lane1_slope - lane2_slope) / lane2_slope)
+                return [percent_diff]
+            except ZeroDivisionError as e:
+                return [1]
+
+        # No lanes detected
+        else:
+            return [1]
+    else:
+        return [1]
+
+
+# temp, formatting is kinda wonky temp fix
+def format_lanes(lanes):
+    if lanes:
+        if len(lanes) == 2:
+            return [list(lanes[0][0]), list(lanes[1][0])]
+        elif len(lanes) == 1:
+            return [list(lanes[0][0])]
+    else:
+        return []

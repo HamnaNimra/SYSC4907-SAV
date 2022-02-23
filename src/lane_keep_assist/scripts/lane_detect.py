@@ -4,13 +4,13 @@ import numpy as np
 import math
 from typing import List, Tuple
 
+HOUGH_MIN_VOTES = 50
+HOUGH_MIN_LINE_LENGTH = 50
+HOUGH_MAX_LINE_GAP = 15
 
-HOUGH_MIN_VOTES = 20
-HOUGH_MIN_LINE_LENGTH = 30
-HOUGH_MAX_LINE_GAP = 5
+CANNY_MIN_THRESHOLD = 150
+CANNY_MAX_THRESHOLD = 200
 
-CANNY_MIN_THRESHOLD = 40
-CANNY_MAX_THRESHOLD = 80
 
 # HLS thresholding on the image
 def hls_thresholding(image: np.ndarray) -> np.ndarray:
@@ -23,8 +23,8 @@ def hls_thresholding(image: np.ndarray) -> np.ndarray:
     hls_image = cv.merge([h, l, s])
 
     # Yellow lower and upper threshold values
-    yellow_lower = np.array([20, 120, 40], dtype="uint8")
-    yellow_upper = np.array([45, 255, 255], dtype="uint8")
+    yellow_lower = np.array([10, 120, 40], dtype="uint8")
+    yellow_upper = np.array([65, 255, 255], dtype="uint8")
 
     # Upper and lower thresholds for a white or very close to white color
     lower_white = np.array([0, 230, 0], dtype="uint8")
@@ -43,7 +43,6 @@ def hls_thresholding(image: np.ndarray) -> np.ndarray:
 def gradient_thresholding(gray: np.ndarray) -> np.ndarray:
     # Min and max thresholds for the gradient magnitude to determine if it is an edge
     canny_detection = cv.Canny(gray, CANNY_MIN_THRESHOLD, CANNY_MAX_THRESHOLD)
-
     return canny_detection
 
 
@@ -51,29 +50,16 @@ def gradient_thresholding(gray: np.ndarray) -> np.ndarray:
 # to cut out as many regions as possible.
 def mask_image(edges: np.ndarray) -> np.ndarray:
     height, width = edges.shape
-    # Define the polygonal region we want to look at.
-    polygons = np.array([
-        [(0, height - 150), (0, height), (width, height), (width, height - 150), (width / 2, 150)]
-    ], np.int32)
-    # Creates an image filled with zero intensities with the same dimensions as the frame
-    mask = np.zeros_like(edges)
-    # Allows the mask to be filled with values of 1 and the other areas to be filled with values of 0
-    cv.fillPoly(mask, polygons, 255)
-    # A bitwise and operation between the mask and frame keeps only the triangular area of the frame
-    segment = cv.bitwise_and(edges, mask)
-    return segment
 
-
-# Create a mask for the segmented image detection, only look at the lower half of the screen
-def mask_segmented_image(edges: np.ndarray) -> np.ndarray:
-    height, width = edges.shape
     # Define the polygonal region we want to look at.
+    # Cut off the top half
     polygons = np.array([[
         (0, height * 1 / 2),
         (width, height * 1 / 2),
         (width, height),
         (0, height),
     ]], np.int32)
+
     # Creates an image filled with zero intensities with the same dimensions as the frame
     mask = np.zeros_like(edges)
     # Allows the mask to be filled with values of 1 and the other areas to be filled with values of 0
@@ -94,7 +80,7 @@ def hough_line_detection(edges: np.ndarray):
     return line_segments
 
 
-# Hough line interpolation
+# Get two points from a line
 def make_points(frame: np.ndarray, line: np.ndarray) -> List[List[float]]:
     height, width, _ = frame.shape
     slope, intercept = line
@@ -110,12 +96,8 @@ def make_points(frame: np.ndarray, line: np.ndarray) -> List[List[float]]:
         return [[0, 0, 0, 0]]
 
 
+# Divide the lanes into left and right segments
 def average_slope_intercept(frame: np.ndarray, line_segments: np.ndarray):
-    """
-    This function combines line segments into one or two lane lines
-    If all line slopes are < 0: then we only have detected left lane
-    If all line slopes are > 0: then we only have detected right lane
-    """
     lane_lines = []
     if line_segments is None:
         return lane_lines
@@ -124,9 +106,7 @@ def average_slope_intercept(frame: np.ndarray, line_segments: np.ndarray):
     left_fit = []
     right_fit = []
 
-    boundary = 1 / 3
-    left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
-    right_region_boundary = width * boundary  # right lane line segment should be on left 2/3 of the screen
+    boundary = width * 1 / 2
 
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:
@@ -135,12 +115,17 @@ def average_slope_intercept(frame: np.ndarray, line_segments: np.ndarray):
             fit = np.polyfit((x1, x2), (y1, y2), 1)
             slope = fit[0]
             intercept = fit[1]
-            if slope < 0:
-                if x1 < left_region_boundary and x2 < left_region_boundary:
-                    left_fit.append((slope, intercept))
+
+            # Try and remove more horizontal hough lines that are likely not lanes
+            if 0.1 > slope > -0.1:
+                continue
+
+            if x1 < boundary and x2 < boundary:
+                left_fit.append((slope, intercept))
+            elif x1 > boundary and x2 > boundary:
+                right_fit.append((slope, intercept))
             else:
-                if x1 > right_region_boundary and x2 > right_region_boundary:
-                    right_fit.append((slope, intercept))
+                continue
 
     left_fit_average = np.average(left_fit, axis=0)
     if len(left_fit) > 0:
@@ -181,45 +166,53 @@ def get_road_detection(image: np.ndarray) -> (np.ndarray, int):
 def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
     gray_image = cv.cvtColor(cv_img, cv.COLOR_BGR2GRAY)
 
-    # Gradient and HLS thresholding
+    # Gradient threshold of scene image
     gradient_threshold = gradient_thresholding(gray_image)
+
+    # HLS threshold of scene image
     hls_threshold = hls_thresholding(cv_img)
 
-    # gradient threshold of segmentation
+    # Getting the road/main detection of the segmented image
     segmented_road, road_colour = get_road_detection(segmented_image)
-    #Bluring the image to try and reduce the affect of aliasing
+    # Blurring the image to try and reduce the affect of aliasing
     segmented_gray_blur = cv.blur(segmented_road, (4, 4))
     gradient_threshold_segmentation = gradient_thresholding(segmented_gray_blur)
 
-    # Analyse the actual camera image
+    # Apply half mask to both images
+    masked_segmented = mask_image(gradient_threshold_segmentation)
+    masked_gradient = mask_image(gradient_threshold)
+    masked_hls = mask_image(hls_threshold)
 
-    # Combine the two thresholding methods
-    combined = cv.bitwise_or(gradient_threshold, hls_threshold)
-    # Mask the image
-    masked_image = mask_image(combined)
-    # Perform the hough transform
-    hough_lines = hough_line_detection(masked_image)
-    # Get the lanes from the hough lines
-    lane_lines = average_slope_intercept(cv_img, hough_lines)
+    # Only look at objects that are on the ground for gradient and hls
+    masked_gradient = cv.bitwise_and(masked_gradient, segmented_road)
+    masked_hls = cv.bitwise_and(masked_hls, segmented_road)
 
-    # Analyse the segmentation image
-    masked_segmented = mask_segmented_image(gradient_threshold_segmentation)
-    # Perform the hough transform
-    hough_lines_segmented = hough_line_detection(masked_segmented)
-    # Get the lanes from the hough lines
-    lane_lines_segmented = average_slope_intercept(cv_img, hough_lines_segmented)
+    # Perform the hough transform on each detection
+    hough_gradient = hough_line_detection(masked_gradient)
+    hough_segmented = hough_line_detection(masked_segmented)
+    hough_hls = hough_line_detection(masked_hls)
 
-    # Saved for live visualization
-    # for line in hough_lines_segmented:
-    #     for x1, y1, x2, y2 in line:
-    #         cv.line(cv_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    # Get the lanes from each detection
+    gradient_lane_lines = average_slope_intercept(cv_img, hough_gradient)
+    segmented_lane_lines = average_slope_intercept(cv_img, hough_segmented)
+    hls_lane_lines = average_slope_intercept(cv_img, hough_hls)
 
-    # if lane_lines:
-    #     coord1, coord2, coord3, coord4 = lane_lines[0][0]
-    #     cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
-    #
-    #     coord1, coord2, coord3, coord4 = lane_lines[1][0]
-    #     cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
-    # cv.waitKey(1)
+    # Saved for live visualization assumes two lanes
+    for line in hough_gradient:
+        for x1, y1, x2, y2 in line:
+            fit = np.polyfit((x1, x2), (y1, y2), 1)
+            slope = fit[0]
+            if 0.1 > slope > -0.1:
+                continue
+            cv.line(cv_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-    return lane_lines, lane_lines_segmented, road_colour
+    if gradient_lane_lines:
+        coord1, coord2, coord3, coord4 = gradient_lane_lines[0][0]
+        cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
+
+        coord1, coord2, coord3, coord4 = gradient_lane_lines[1][0]
+        cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
+    cv.imshow("demo", cv_img)
+    cv.waitKey(1)
+
+    return gradient_lane_lines, hls_lane_lines, segmented_lane_lines, road_colour
