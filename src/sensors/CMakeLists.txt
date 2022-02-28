@@ -44,6 +44,7 @@ find_package(catkin REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
+    sensor_msgs
     message_generation
 )
 
@@ -51,6 +52,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Speed.msg
+  SceneDepth.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -70,7 +72,8 @@ add_message_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
+  std_msgs
+  sensor_msgs
 )
 
 ################################################
