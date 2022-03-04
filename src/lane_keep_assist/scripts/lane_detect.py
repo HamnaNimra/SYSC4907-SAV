@@ -10,7 +10,7 @@ HOUGH_MAX_LINE_GAP = 10
 
 HOUGH_MIN_VOTES_SEGMENTED = 10
 HOUGH_MIN_LINE_LENGTH_SEGMENTED = 50
-HOUGH_MAX_LINE_GAP_SEGMENTED = 1
+HOUGH_MAX_LINE_GAP_SEGMENTED = 5
 
 CANNY_MIN_THRESHOLD = 150
 CANNY_MAX_THRESHOLD = 200
@@ -204,6 +204,7 @@ def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
     # Blurring the image to try and reduce the affect of aliasing
     segmented_gray_blur = cv.blur(segmented_road, (4, 4))
     gradient_threshold_segmentation = gradient_thresholding(segmented_gray_blur)
+    # Doing the same thing, but this time to possible increase the size of the lines and again reduce aliasing
     gradient_threshold_segmentation = cv.blur(gradient_threshold_segmentation, (3, 3))
     gradient_threshold_segmentation[gradient_threshold_segmentation > 0] = 255
 
