@@ -14,3 +14,10 @@ def take_picture(filename):
     img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8)
     img_rgb = img1d.reshape(response.height, response.width, 3)
     airsim.write_png(os.path.normpath(filename + '.png'), img_rgb)
+
+    responses = client.simGetImages([airsim.ImageRequest("1", airsim.ImageType.Segmentation, False, False)])
+    response = responses[0]
+
+    img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8)
+    img_rgb = img1d.reshape(response.height, response.width, 3)
+    airsim.write_png(os.path.normpath(filename + '_segmented.png'), img_rgb)

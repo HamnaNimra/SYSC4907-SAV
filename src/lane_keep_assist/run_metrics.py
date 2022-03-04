@@ -1,8 +1,8 @@
-from test.lane_detect_test import *
+from lane_test import lane_detect_test
 
 
 def main():
-    measure_detect()
+    lane_detect_test.measure_detect()
 
 
 if __name__ == "__main__":

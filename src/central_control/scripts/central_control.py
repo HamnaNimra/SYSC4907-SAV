@@ -4,7 +4,7 @@ import rospy
 import airsim
 from sign_car_recognition.msg import DetectionResult, DetectionResults
 from std_msgs.msg import Float64
-from lane_keep_assist.msg import LaneStatus, Lane
+from lane_keep_assist.msg import LaneStatus, LaneLine
 
 
 class CentralControl:
@@ -50,9 +50,20 @@ class CentralControl:
     def handle_sign_recognition(self, detection_results):
         print("Obtained sign recognition data")
 
+    # Results from lane detection
+    # If the detection methods agree on the number of lane bounds a percent difference per line is returned
+    # If the detection methods don't agree a single error of 100 is returned, 100 is the value itself
+    # There can be a max number of two lane bounds returned
     def handle_lane_data(self, lane_data):
         print("Obtained lane data")
-        rospy.loginfo(f"{lane_data.gradient_lanes}")
+        rospy.loginfo(f"{lane_data.lane_gradient_status}")
+        rospy.loginfo(f"{lane_data.lane_hls_status}")
+        rospy.loginfo(f"{lane_data.lane_segmentation_status}")
+        rospy.loginfo(f"{lane_data.gradient_lane_bounds}")
+        rospy.loginfo(f"{lane_data.hls_lane_bounds}")
+        rospy.loginfo(f"{lane_data.segmentation_lane_bounds}")
+        rospy.loginfo(f"{lane_data.gradient_diff}")
+        rospy.loginfo(f"{lane_data.hls_diff}")
 
 
 

@@ -8,6 +8,10 @@ HOUGH_MIN_VOTES = 50
 HOUGH_MIN_LINE_LENGTH = 60
 HOUGH_MAX_LINE_GAP = 10
 
+HOUGH_MIN_VOTES_SEGMENTED = 10
+HOUGH_MIN_LINE_LENGTH_SEGMENTED = 50
+HOUGH_MAX_LINE_GAP_SEGMENTED = 1
+
 CANNY_MIN_THRESHOLD = 150
 CANNY_MAX_THRESHOLD = 200
 
@@ -80,6 +84,17 @@ def hough_line_detection(edges: np.ndarray):
     return line_segments
 
 
+# Detect the hough lines
+def hough_line_detection_segmentation(edges: np.ndarray):
+    rho = 1  # distance precision in pixel, i.e. 1 pixel
+    angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
+    min_threshold = HOUGH_MIN_VOTES_SEGMENTED  # minimal of votes
+    line_segments = cv.HoughLinesP(edges, rho, angle, min_threshold,
+                                   np.array([]), minLineLength=HOUGH_MIN_LINE_LENGTH_SEGMENTED, maxLineGap=HOUGH_MAX_LINE_GAP_SEGMENTED)
+
+    return line_segments
+
+
 # Get two points from a line
 def make_points(frame: np.ndarray, line: np.ndarray) -> List[List[float]]:
     height, width, _ = frame.shape
@@ -89,11 +104,23 @@ def make_points(frame: np.ndarray, line: np.ndarray) -> List[List[float]]:
 
     # bound the coordinates within the frame
     try:
-        x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
-        x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
-        return [[x1, y1, x2, y2]]
+        x1 = int((y1 - intercept) / slope)
+        if not 0 <= x1 <= width:
+            if slope < 0:
+                x1 = 0
+            else:
+                x1 = width
+            y1 = int(x1*slope + intercept)
+        x2 = int((y2 - intercept) / slope)
+        if not 0 <= x2 <= width:
+            if slope > 0:
+                x2 = 0
+            else:
+                x2 = width
+            y2 = int(x2*slope + intercept)
+        return [x1, y1, x2, y2]
     except OverflowError as e:
-        return [[0, 0, 0, 0]]
+        return [0, 0, 0, 0]
 
 
 # Divide the lanes into left and right segments
@@ -177,6 +204,8 @@ def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
     # Blurring the image to try and reduce the affect of aliasing
     segmented_gray_blur = cv.blur(segmented_road, (4, 4))
     gradient_threshold_segmentation = gradient_thresholding(segmented_gray_blur)
+    gradient_threshold_segmentation = cv.blur(gradient_threshold_segmentation, (3, 3))
+    gradient_threshold_segmentation[gradient_threshold_segmentation > 0] = 255
 
     # Apply half mask to both images
     masked_segmented = mask_image(gradient_threshold_segmentation)
@@ -189,7 +218,7 @@ def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
 
     # Perform the hough transform on each detection
     hough_gradient = hough_line_detection(masked_gradient)
-    hough_segmented = hough_line_detection(masked_segmented)
+    hough_segmented = hough_line_detection_segmentation(masked_segmented)
     hough_hls = hough_line_detection(masked_hls)
 
     # Get the lanes from each detection
@@ -199,21 +228,26 @@ def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
 
     # # Saved for live visualization assumes two lanes
     # try:
-    #     for line in hough_gradient:
-    #         for x1, y1, x2, y2 in line:
-    #             fit = np.polyfit((x1, x2), (y1, y2), 1)
-    #             slope = fit[0]
-    #             if 0.1 > slope > -0.1:
-    #                 continue
-    #             cv.line(cv_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    #     masked_segmented = cv.cvtColor(masked_segmented, cv.COLOR_GRAY2RGB)
+    #     if hough_segmented is not None:
+    #         for line in hough_segmented:
+    #             for x1, y1, x2, y2 in line:
+    #                 fit = np.polyfit((x1, x2), (y1, y2), 1)
+    #                 slope = fit[0]
+    #                 if 0.1 > slope > -0.1:
+    #                     continue
+    #                 cv.line(masked_segmented, (x1, y1), (x2, y2), (255, 0, 0), 2)
     #
     #     if gradient_lane_lines:
-    #         coord1, coord2, coord3, coord4 = gradient_lane_lines[0][0]
-    #         cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
+    #         for line in gradient_lane_lines:
+    #             coord1, coord2, coord3, coord4 = line
+    #             cv.line(masked_segmented, (coord1, coord2), (coord3, coord4), (0, 0, 255), 2)
     #
-    #         coord1, coord2, coord3, coord4 = gradient_lane_lines[1][0]
-    #         cv.line(cv_img, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
-    #     cv.imshow("masked", masked_hls)
+    #     if segmented_lane_lines:
+    #         for line in segmented_lane_lines:
+    #             coord1, coord2, coord3, coord4 = line
+    #             cv.line(masked_segmented, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
+    #     cv.imshow("masked", masked_segmented)
     #     cv.imshow("demo", cv_img)
     #     cv.waitKey(1)
     # except IndexError as e:

@@ -5,7 +5,7 @@ import lane_turn
 from std_msgs.msg import Float64, UInt8
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import PointCloud, Image
-from lane_keep_assist.msg import LaneStatus, Lane
+from lane_keep_assist.msg import LaneStatus, LaneLine
 
 
 class LaneKeepAssist:
@@ -42,24 +42,24 @@ class LaneKeepAssist:
                 lane_msg.lane_segmentation_status = self.segmentation_state
                 lane_msg.gradient_diff = self.gradient_percent_diff
                 lane_msg.hls_diff = self.hls_percent_diff
-                lane_msg.gradient_lanes = []
-                lane_msg.hls_lanes = []
-                lane_msg.segmentation_lane = []
+                lane_msg.gradient_lane_bounds = []
+                lane_msg.hls_lane_bounds = []
+                lane_msg.segmentation_lane_bounds = []
 
                 for lane_result in self.gradient_lanes:
-                    lane = Lane()
-                    lane.lane = lane_result
-                    lane_msg.gradient_lanes.append(lane)
+                    lane = LaneLine()
+                    lane.x1, lane.y1, lane.x2, lane.y2 = lane_result
+                    lane_msg.gradient_lane_bounds.append(lane)
 
                 for lane_result in self.hls_lanes:
-                    lane = Lane()
-                    lane.lane = lane_result
-                    lane_msg.hls_lanes.append(lane)
+                    lane = LaneLine()
+                    lane.x1, lane.y1, lane.x2, lane.y2 = lane_result
+                    lane_msg.hls_lane_bounds.append(lane)
 
                 for lane_result in self.segmentation_lane:
-                    lane = Lane()
-                    lane.lane = lane_result
-                    lane_msg.segmentation_lane.append(lane)
+                    lane = LaneLine()
+                    lane.x1, lane.y1, lane.x2, lane.y2 = lane_result
+                    lane_msg.segmentation_lane_bounds.append(lane)
 
                 self.steering_pub_test.publish(lane_msg)
             rate.sleep()
@@ -71,7 +71,6 @@ class LaneKeepAssist:
         self.gradient_state, self.hls_state, self.segmentation_state = lane_results
         self.gradient_percent_diff, self.hls_percent_diff = percent_differences
         self.gradient_lanes, self.hls_lanes, self.segmentation_lane = lanes
-        self.road_colour = road_colour
 
         # Save the first colour detected for the road detection
         if self.first_detection:
@@ -81,10 +80,14 @@ class LaneKeepAssist:
         # If the majority colour, aka segment, detection has chaned then the car is no longer detecting the road, it is looking at the wrong segment.
         # Therefore ignore the output from the road detector
         if self.road_colour != road_colour:
+            self.gradient_state = 4
+            self.hls_state = 4
             self.segmentation_state = 4
-            self.gradient_percent_diff = 1
-            self.hls_percent_diff = 1
+            self.gradient_lanes = []
+            self.hls_lanes = []
             self.segmentation_lane = []
+            self.gradient_percent_diff = [100]
+            self.hls_percent_diff = [100]
 
         rospy.loginfo(f"Gradient Result: Lane state={self.gradient_state}, Percent Diff={self.gradient_percent_diff}, Lanes={self.gradient_lanes}")
         rospy.loginfo(f"HLS Result: Lane state={self.hls_state}, Percent Diff={self.hls_percent_diff}, Lanes={self.hls_lanes}")
