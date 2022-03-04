@@ -84,7 +84,7 @@ def hough_line_detection(edges: np.ndarray):
     return line_segments
 
 
-# Detect the hough lines
+# Detect the hough lines, different methods to try using different parameters for segmented image
 def hough_line_detection_segmentation(edges: np.ndarray):
     rho = 1  # distance precision in pixel, i.e. 1 pixel
     angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
