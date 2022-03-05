@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import rospy
-import lane_turn
+import lane_analyze
 from std_msgs.msg import Float64, UInt8
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import PointCloud, Image
 from lane_keep_assist.msg import LaneStatus, LaneLine
+from lane_bound_status import LaneBoundStatus
 
 
 class LaneKeepAssist:
@@ -37,9 +38,9 @@ class LaneKeepAssist:
 
                 # Lane status message carries info on the lane boundaries, road boundaries and the percent diff
                 lane_msg = LaneStatus()
-                lane_msg.lane_gradient_status = self.gradient_state
-                lane_msg.lane_hls_status = self.hls_state
-                lane_msg.lane_segmentation_status = self.segmentation_state
+                lane_msg.lane_gradient_status = self.gradient_state.value
+                lane_msg.lane_hls_status = self.hls_state.value
+                lane_msg.lane_segmentation_status = self.segmentation_state.value
                 lane_msg.gradient_diff = self.gradient_percent_diff
                 lane_msg.hls_diff = self.hls_percent_diff
                 lane_msg.gradient_lane_bounds = []
@@ -67,7 +68,7 @@ class LaneKeepAssist:
     # Process the normal scene image and road boundaries image
     def process(self):
         # Unpacking the results
-        lane_results, percent_differences, lanes, road_colour = lane_turn.lane_interpret(self.image, self.segmented_image)
+        lane_results, percent_differences, lanes, road_colour = lane_analyze.lane_interpret(self.image, self.segmented_image)
         self.gradient_state, self.hls_state, self.segmentation_state = lane_results
         self.gradient_percent_diff, self.hls_percent_diff = percent_differences
         self.gradient_lanes, self.hls_lanes, self.segmentation_lane = lanes
@@ -80,9 +81,9 @@ class LaneKeepAssist:
         # If the majority colour, aka segment, detection has chaned then the car is no longer detecting the road, it is looking at the wrong segment.
         # Therefore ignore the output from the road detector
         if self.road_colour != road_colour:
-            self.gradient_state = 4
-            self.hls_state = 4
-            self.segmentation_state = 4
+            self.gradient_state = LaneBoundStatus.NO_BOUNDS
+            self.hls_state = LaneBoundStatus.NO_BOUNDS
+            self.segmentation_state = LaneBoundStatus.NO_BOUNDS
             self.gradient_lanes = []
             self.hls_lanes = []
             self.segmentation_lane = []

@@ -74,7 +74,7 @@ def mask_image(edges: np.ndarray) -> np.ndarray:
 
 
 # Detect the hough lines
-def hough_line_detection(edges: np.ndarray):
+def hough_line_detection(edges: np.ndarray) -> List[Tuple[float, float, float, float]]:
     rho = 1  # distance precision in pixel, i.e. 1 pixel
     angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
     min_threshold = HOUGH_MIN_VOTES  # minimal of votes
@@ -85,7 +85,7 @@ def hough_line_detection(edges: np.ndarray):
 
 
 # Detect the hough lines, different methods to try using different parameters for segmented image
-def hough_line_detection_segmentation(edges: np.ndarray):
+def hough_line_detection_segmentation(edges: np.ndarray) -> List[Tuple[float, float, float, float]]:
     rho = 1  # distance precision in pixel, i.e. 1 pixel
     angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
     min_threshold = HOUGH_MIN_VOTES_SEGMENTED  # minimal of votes
@@ -124,7 +124,7 @@ def make_points(frame: np.ndarray, line: np.ndarray) -> List[List[float]]:
 
 
 # Divide the lanes into left and right segments
-def average_slope_intercept(frame: np.ndarray, line_segments: np.ndarray):
+def average_slope_intercept(frame: np.ndarray, line_segments: np.ndarray) -> List[float]:
     lane_lines = []
     if line_segments is None:
         return lane_lines
@@ -190,7 +190,7 @@ def get_road_detection(image: np.ndarray) -> (np.ndarray, int):
 
 
 # Detect the lines of both the lanes and the road bounds
-def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray):
+def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray) -> Tuple[List, List, List, int]:
     gray_image = cv.cvtColor(cv_img, cv.COLOR_BGR2GRAY)
 
     # Gradient threshold of scene image

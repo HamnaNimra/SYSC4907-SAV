@@ -2,7 +2,6 @@
 
 # Example ROS node for publishing AirSim images.
 
-import setup_path
 import airsim
 
 import rospy
