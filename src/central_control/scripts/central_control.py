@@ -7,6 +7,8 @@ import cv2 as cv
 from sign_car_recognition.msg import DetectionResult, DetectionResults
 from std_msgs.msg import Float64, String
 from geometry_msgs.msg import PoseStamped
+from lane_keep_assist.msg import LaneStatus, Lane
+
 from enum import Enum
 import math
 from typing import List, Set, Tuple, Any, Dict
@@ -81,6 +83,8 @@ class CentralControl:
         self.avoid: List[DetectionResult] = []
         # Action, Data
         self.persistent_actions: List[Tuple[CarAction, Any]] = []
+        # Store Lane Keep Assist lane detections
+        self.lka_lanes: List[Lane] = []
 
         # TODO: implement system
         # Each subsystem will have their own formatted recommendation object?
@@ -104,6 +108,7 @@ class CentralControl:
 
     def listen(self):
         rospy.init_node("central_control", anonymous=True)
+        rospy.Subscriber("lane_info", LaneStatus, self.handle_lane_data)
         rospy.Subscriber("steering", Float64, self.handle_steering_data)
         rospy.Subscriber("braking", Float64, self.handle_breaking_data)
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
@@ -131,12 +136,19 @@ class CentralControl:
             if not self.object_data:
                 self.cc_state.add(CCState.NORMAL)
             else:
+                # Lane boundary calculations (left, right)
+                # TODO: take from LKA
+                # slope = (y1-y2)/(x1-x2)
+                # intercept = y - ax
+                l_slope, l_int = -0.19868, 364
+                r_slope, r_int = 0.27991, 137.28205
+
                 for obj in self.object_data:
                     is_danger = False
                     # Get x-center, y near the bottom of bounding box
                     cx, cy = (obj.xmax + obj.xmin)/2, 0.7*(obj.ymax - obj.ymin) + obj.ymin
                     # Check if in danger zone
-                    if cy > -0.19868 * cx + 364 and cy > 0.27991 * cx + 137.28205 and obj.depth < 15:
+                    if cy > l_slope * cx + l_int and cy > r_slope * cx + r_int and obj.depth < 15:
                         is_danger = True
                         self.cc_state.add(CCState.OBJECT_AVOID)
                         self.avoid.append(obj)
@@ -191,6 +203,14 @@ class CentralControl:
 
     # def control(self):
     #     print("Control loop")
+
+    def handle_lane_data(self, lane_data: LaneStatus):
+        if lane_data.gradient_diff < lane_data.hls_diff:
+            # Gradient is more reliable
+            self.lka_lanes = lane_data.gradient_lanes
+        else:
+            # HLS color thresholding is more reliable
+            self.lka_lanes = lane_data.hls_lanes
 
     def handle_speed(self, speed: Float64):
         self.speed = speed
