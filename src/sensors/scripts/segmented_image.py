@@ -1,8 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Example ROS node for publishing AirSim images.
 
-# AirSim Python API
 import airsim
 
 import rospy
@@ -10,29 +9,30 @@ import rospy
 # ROS Image message
 from sensor_msgs.msg import Image
 
-def airpub():
-    pub = rospy.Publisher("airsim/image_raw", Image, queue_size=1)
-    rospy.init_node('image_raw', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
 
-    # connect to the AirSim simulator 
-    client = airsim.MultirotorClient()
+def segmented_image():
+    pub = rospy.Publisher("segmented_image", Image, queue_size=1)
+    rospy.init_node('segmented_image', anonymous=True)
+    rate = rospy.Rate(10)  # 10hz
+
+    # connect to the AirSim simulator
+    host_ip = rospy.get_param('/host_ip')
+    client = airsim.CarClient(ip=host_ip)
     client.confirmConnection()
 
     while not rospy.is_shutdown():
-         # get camera images from the car
-        responses = client.simGetImages([
-            airsim.ImageRequest("1", airsim.ImageType.Scene, False, False)])  #scene vision image in uncompressed RGB array
+        # get camera images from the car
+        responses = client.simGetImages([airsim.ImageRequest("1", airsim.ImageType.Segmentation, False, False)])  # scene vision image in uncompressed RGB array
 
         for response in responses:
             img_rgb_string = response.image_data_uint8
 
         # Populate image message
-        msg=Image() 
+        msg = Image()
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = "frameId"
         msg.encoding = "rgb8"
-        msg.height = 360  # resolution should match values in settings.json 
+        msg.height = 360  # resolution should match values in settings.json
         msg.width = 640
         msg.data = img_rgb_string
         msg.is_bigendian = 0
@@ -48,6 +48,6 @@ def airpub():
 
 if __name__ == '__main__':
     try:
-        airpub()
+        segmented_image()
     except rospy.ROSInterruptException:
         pass

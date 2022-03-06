@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import rospy
 import airsim
 import numpy as np
@@ -67,6 +68,7 @@ class CentralControl:
     """Central Controller containing logic that processes all the sensor data"""
     def __init__(self):
         host_ip = rospy.get_param('/host_ip')
+
         self.client = airsim.CarClient(ip=host_ip)
         self.client.confirmConnection()
         self.client.enableApiControl(True)
@@ -204,6 +206,10 @@ class CentralControl:
     # def control(self):
     #     print("Control loop")
 
+    # Results from lane detection
+    # If the detection methods agree on the number of lane bounds a percent difference per line is returned
+    # If the detection methods don't agree a single error of 100 is returned, 100 is the value itself
+    # There can be a max number of two lane bounds returned
     def handle_lane_data(self, lane_data: LaneStatus):
         if lane_data.gradient_diff < lane_data.hls_diff:
             # Gradient is more reliable
@@ -249,4 +255,3 @@ if __name__ == "__main__":
     # Do something
     centralControl = CentralControl()
     centralControl.listen()
-
