@@ -8,7 +8,8 @@ import cv2 as cv
 from sign_car_recognition.msg import DetectionResult, DetectionResults
 from std_msgs.msg import Float64, String
 from geometry_msgs.msg import PoseStamped
-from lane_keep_assist.msg import LaneStatus, Lane
+from lane_keep_assist.msg import LaneStatus, LaneLine
+from lane_bound_status import LaneBoundStatus
 
 from enum import Enum
 import math
@@ -28,6 +29,7 @@ class StreetRuleAction(Enum):
 
 
 class AvoidanceState(Enum):
+    """Unused"""
     DANGER = 1
     WARNING = 2
     NORMAL = 3
@@ -86,7 +88,9 @@ class CentralControl:
         # Action, Data
         self.persistent_actions: List[Tuple[CarAction, Any]] = []
         # Store Lane Keep Assist lane detections
-        self.lka_lanes: List[Lane] = []
+        self.lka_lanes: List[LaneLine] = []
+        self.lane_status: LaneBoundStatus = LaneBoundStatus.NO_BOUNDS
+        self.lane_debug: LaneStatus = None
 
         # TODO: implement system
         # Each subsystem will have their own formatted recommendation object?
@@ -118,7 +122,7 @@ class CentralControl:
         rospy.Subscriber("sensor/speed", Float64, self.handle_speed)
 
         # Midpoint of the image width
-        MID_X = 960 / 2
+        MID_X = 640 / 2
 
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
@@ -135,29 +139,42 @@ class CentralControl:
                 if sign.depth <= 15:
                     self.cc_state.add(CCState.STREET_RULE)
 
+            # Lane boundary calculations (left, right)
+            # NOTE: The lane line detections from LKA are done on a 640 x 360 image
+            # slope = (y1-y2)/(x1-x2)
+            # intercept = y - ax
+            if self.lane_status == LaneBoundStatus.ONE_BOUND_LEFT or self.lane_status == LaneBoundStatus.TWO_BOUNDS:
+                lane = self.lka_lanes[0]
+                l_slope = (lane.y1-lane.y2)/(lane.x1-lane.x2)
+                l_int = (lane.y2 - l_slope * lane.x2)
+            else:
+                # No bounds, use hardcoded default
+                l_slope, l_int = -0.19868, 364/1.5
+
+            if self.lane_status == LaneBoundStatus.ONE_BOUND_RIGHT or self.lane_status == LaneBoundStatus.TWO_BOUNDS:
+                lane = self.lka_lanes[1] if len(self.lka_lanes) == 2 else self.lka_lanes[0]
+                r_slope = (lane.y1-lane.y2)/(lane.x1-lane.x2)
+                r_int = (lane.y2 - r_slope * lane.x2)
+            else:
+                # No bounds, use hardcoded default
+                r_slope, r_int = 0.27991, 137.28205/1.5
+
             if not self.object_data:
                 self.cc_state.add(CCState.NORMAL)
             else:
-                # Lane boundary calculations (left, right)
-                # TODO: take from LKA
-                # slope = (y1-y2)/(x1-x2)
-                # intercept = y - ax
-                l_slope, l_int = -0.19868, 364
-                r_slope, r_int = 0.27991, 137.28205
-
                 for obj in self.object_data:
                     is_danger = False
                     # Get x-center, y near the bottom of bounding box
-                    cx, cy = (obj.xmax + obj.xmin)/2, 0.7*(obj.ymax - obj.ymin) + obj.ymin
+                    cx, cy = (obj.xmax + obj.xmin)/2, 0.5*(obj.ymax - obj.ymin) + obj.ymin
                     # Check if in danger zone
-                    if cy > l_slope * cx + l_int and cy > r_slope * cx + r_int and obj.depth < 15:
+                    if cy > (l_slope * cx + l_int) and cy > (r_slope * cx + r_int) and obj.depth < 15:
                         is_danger = True
                         self.cc_state.add(CCState.OBJECT_AVOID)
                         self.avoid.append(obj)
                         rospy.loginfo(f'Mark as avoid: {obj}')
 
                     # Add bounding boxes for debug image
-                    # BGR
+                    # Colours are (B, G, R)
                     color = (0, 0, 255) if is_danger else (0, 255, 0)
                     x1, x2, y1, y2 = math.floor(obj.xmin), math.floor(obj.xmax), math.floor(obj.ymin), math.floor(obj.ymax)
                     cv.rectangle(scene, (x1, y1), (x2, y2), color, 2)
@@ -178,12 +195,10 @@ class CentralControl:
                 if cx > MID_X:
                     # Right side
                     self.car_controls.steering = -0.8
-                    # rospy.loginfo(f'Avoiding to left: {cur}')
                     cv.putText(scene, 'Go Left', (cx, cy), 0, 0.3, (0, 255, 255))
                 else:
                     # Left side
                     self.car_controls.steering = 0.8
-                    # rospy.loginfo(f'Avoiding to right: {cur}')
                     cv.putText(scene, 'Go Right', (cx, cy), 0, 0.3, (0, 255, 255))
             elif CCState.STREET_RULE in self.cc_state:
                 # Actions taken when in Street Rule mode
@@ -194,10 +209,13 @@ class CentralControl:
                 self.client.setCarControls(self.car_controls)
 
                 # Mark danger zones
-                cv.line(scene, (0, 364), (453, 274), (0, 0, 255), 3)  # Left
-                cv.line(scene, (959, 406), (492, 275), (0, 0, 255), 3)  # Right
-                # Write debug image
+                cv.line(scene, (0, round(l_int)), (round(-l_int/l_slope), 0), (0, 0, 255), 3)  # Left
+                cv.line(scene, (639, round(639*r_slope + r_int)), (round(-r_int/r_slope), 0), (0, 0, 255), 3)  # Right
+                # Write debug image every two images
                 if self.tick % 2 == 0:
+                    """
+                    DON'T LEAVE THIS RUNNING FOR LONG PERIODS OF TIME OR YOU WILL FILL YOUR HARD DRIVE
+                    """
                     cv.imwrite(f'/home/mango/test_imgs/n_{rospy.Time.now()}_s.png', scene)
 
             rate.sleep()
@@ -206,17 +224,30 @@ class CentralControl:
     # def control(self):
     #     print("Control loop")
 
-    # Results from lane detection
-    # If the detection methods agree on the number of lane bounds a percent difference per line is returned
-    # If the detection methods don't agree a single error of 100 is returned, 100 is the value itself
-    # There can be a max number of two lane bounds returned
     def handle_lane_data(self, lane_data: LaneStatus):
-        if lane_data.gradient_diff < lane_data.hls_diff:
+        """
+        Results from lane detection
+        If the detection methods agree on the number of lane bounds a percent difference per line is returned
+        If the detection methods don't agree, a single error of 100 is returned, 100 is the value itself
+        There can be a max number of two lane bounds returned
+        """
+        rospy.loginfo(lane_data)
+        self.lane_debug = lane_data
+        grad_av_diff = sum(lane_data.gradient_diff)/len(lane_data.gradient_diff)
+        hls_av_diff = sum(lane_data.hls_diff)/len(lane_data.hls_diff)
+
+        if grad_av_diff < hls_av_diff < 0.4:
             # Gradient is more reliable
-            self.lka_lanes = lane_data.gradient_lanes
-        else:
+            self.lka_lanes = lane_data.gradient_lane_bounds
+            self.lane_status = LaneBoundStatus(lane_data.lane_gradient_status)
+        elif grad_av_diff < 0.4:
             # HLS color thresholding is more reliable
-            self.lka_lanes = lane_data.hls_lanes
+            self.lka_lanes = lane_data.hls_lane_bounds
+            self.lane_status = LaneBoundStatus(lane_data.lane_hls_status)
+        else:
+            # Other two methods are deemed unreliable, use segmentation results
+            self.lka_lanes = lane_data.segmentation_lane_bounds
+            self.lane_status = LaneBoundStatus(lane_data.lane_segmentation_status)
 
     def handle_speed(self, speed: Float64):
         self.speed = speed
