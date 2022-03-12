@@ -99,13 +99,14 @@ class CentralControl:
                     distance_to_aabb = distance
 
         # Avoid the nearest obstacle if any
-        if closest_aabb_vector is not None:
-            # Lidar points are relative to the car. The "y" dimension, index 1, refers to left or right.
-            # The "x" dimension, index 0, refers to the horizontal distance from the car.
-            if closest_aabb_vector[1] > 0:
-                self.car_controls.steering = -(min(1.0, 0.125 / closest_aabb_vector[0]))
-            elif closest_aabb_vector[1] < 0:
-                self.car_controls.steering = min(1.0, 0.125 / closest_aabb_vector[0])
+        # TODO: Uncomment when intersection notifications are available
+        # if closest_aabb_vector is not None:
+        #     # Lidar points are relative to the car. The "y" dimension, index 1, refers to left or right.
+        #     # The "x" dimension, index 0, refers to the horizontal distance from the car.
+        #     if closest_aabb_vector[1] > 0:
+        #         self.car_controls.steering = -(min(1.0, 0.125 / closest_aabb_vector[0]))
+        #     elif closest_aabb_vector[1] < 0:
+        #         self.car_controls.steering = min(1.0, 0.125 / closest_aabb_vector[0])
 
     # Results from lane detection
     # If the detection methods agree on the number of lane bounds a percent difference per line is returned
