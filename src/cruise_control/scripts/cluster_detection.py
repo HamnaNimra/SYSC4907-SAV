@@ -71,16 +71,18 @@ class ClusterDetection:
     # Given a set of points, finds the enclosing bounding box of all the points.
     # The calculated box is appended to the result array input.
     def find_aabb(self, points: [float], result: [float]):
-        # TODO: Should ideally be set to max value of a float, is there a function to query this without hard coding
-        # TODO: value?
-        min_x = 100000
-        max_x = -100000
 
-        min_y = 100000
-        max_y = -100000
+        # Max value of floats ensures that when iterating over points of the
+        # bounding box, the points that comprise the box will be modified to
+        # reflect the true min and max of the box
+        min_x = 1e+308
+        max_x = -1e+308
 
-        min_z = 100000
-        max_z = -100000
+        min_y = 1e+308
+        max_y = -1e+308
+
+        min_z = 1e+308
+        max_z = -1e+308
 
         for p in points:
             min_x = min(p[0], min_x)

@@ -2,6 +2,7 @@ from math import sqrt
 from point import Point
 from range import Range
 
+# Axis aligned bounding box- ie a box that is not rotated relative to X, Y or Z axis
 class AABB:
     def __init__(self, min_point: Point, max_point: Point):
         self.x_range = Range(min_point.x, max_point.x)
@@ -29,9 +30,12 @@ class AABB:
         z = 2
 
         for point in aabb_corner_points:
-            delta_x = pos[x] - point[x]
-            delta_y = pos[y] - point[y]
-            delta_z = pos[z] - point[z]
+            # delta_x = pos[x] - point[x]
+            # delta_y = pos[y] - point[y]
+            # delta_z = pos[z] - point[z]
+            delta_x = point[x]
+            delta_y = point[y]
+            delta_z = point[z]
 
             distance_to_point = sqrt(delta_x ** 2 + delta_y ** 2 + delta_z ** 2)
             if distance_to_point < current_distance:

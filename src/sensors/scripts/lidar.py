@@ -29,7 +29,7 @@ class Lidar:
             lidar_data = client.getLidarData().point_cloud
 
             # Every point is made of 3 floats
-            num_points = int(len(lidar_data) / 3)
+            num_points = len(lidar_data) // 3
 
             # Convert format of points used by lidar to format of point used by PointCloud message
             for x in range(0, num_points):
