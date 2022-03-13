@@ -34,7 +34,7 @@ class Navigation:
         rospy.init_node('navigation', anonymous=True)
         rospy.Subscriber('airsimPose', PoseStamped, self.handle_gps_data)
         rospy.Subscriber("sensor/speed", Float64, self.handle_speed_data)
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(10)
         # Once to get initial starting index
         self.target_index = self.navigator.search_target_index(self.car_state)[0]
 

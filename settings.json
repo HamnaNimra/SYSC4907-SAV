@@ -9,6 +9,24 @@
   "RpcEnabled": true,
   "PhysicsEngineName": "",
   "EnableCollisionPassthrogh": true,
+  "DefaultSensors": {
+  "Lidar2": {
+      "SensorType": 6,
+      "Enabled" : true,
+      "NumberOfChannels": 16,
+      "RotationsPerSecond": 10,
+      "PointsPerSecond": 100000,
+      "X": 0, "Y": 0, "Z": -1,
+      "Roll": 0, "Pitch": 0, "Yaw" : 0,
+      "VerticalFOVUpper": 3,
+      "VerticalFOVLower": -25,
+      "HorizontalFOVStart": -30,
+      "HorizontalFOVEnd": 30,
+      "Range": 20,
+      "DrawDebugPoints": true,
+      "DataFrame": "SensorLocalFrame"
+    }
+  },
   "CameraDefaults": {
     "CaptureSettings": [
       {

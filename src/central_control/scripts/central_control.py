@@ -6,12 +6,14 @@ import numpy as np
 import cv2 as cv
 
 from sign_car_recognition.msg import DetectionResult, DetectionResults
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Float64MultiArray
 from lane_keep_assist.msg import LaneStatus, LaneLine
 from lane_bound_status import LaneBoundStatus
 from mapping_navigation.msg import PathData
 from road_segment_type import RoadSegmentType
 from road_warning import RoadWarning
+from aabb import AABB
+from point import Point
 
 from enum import Enum
 import math
@@ -122,6 +124,7 @@ class CentralControl:
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
         rospy.Subscriber("object_detection", DetectionResults, self.handle_object_recognition)
         rospy.Subscriber("sensor/speed", Float64, self.handle_speed)
+        rospy.Subscriber("lidar_data", Float64MultiArray, self.handle_lidar_detection)
 
         # Midpoint of the image width
         MID_X = 640 / 2
@@ -269,6 +272,61 @@ class CentralControl:
 
     def handle_throttling_data(self, throttling_data: Float64):
         self.car_controls.throttle = throttling_data.data
+        
+    def handle_lidar_detection(self, lidar_data: Float64MultiArray):
+        # These are indexes into a bounding box for each of the points that it is composed of
+        min_x = 0
+        min_y = 1
+        min_z = 2
+        max_x = 3
+        max_y = 4
+        max_z = 5
+        point_per_aabb = 6
+
+        num_aabb = int(len(lidar_data.data) / point_per_aabb)
+
+        # Find the closest point to the car
+        all_aabbs = []
+
+        for x in range(0, num_aabb):
+            i = x * point_per_aabb
+            min_point = Point(lidar_data.data[i + min_x], lidar_data.data[i + min_y], lidar_data.data[i + min_z])
+            max_point = Point(lidar_data.data[i + max_x], lidar_data.data[i + max_y], lidar_data.data[i + max_z])
+            aabb = AABB(min_point, max_point)
+            all_aabbs.append(aabb)
+
+        # These values can be changed to avoid obstacles that are farther from the car
+        car_aabb = AABB(
+            min_point=Point(0.0, -1.0, 0.0),
+            max_point=Point(10.0, 1.0, 2.0)
+        )
+
+        # Find the point of the closest AABB for the car to avoid, if any. Only if an AABB intersects
+        # with the car's AABB is an obstacle considering for avoidance
+
+        closest_aabb_vector = None
+        distance_to_aabb = None
+
+        for aabb in all_aabbs:
+            if car_aabb.intersection(aabb):
+                (distance, vector_to_closest_point) = aabb.vector_to_closest_point([0, 0, 0])
+
+                if closest_aabb_vector is None:
+                    closest_aabb_vector = vector_to_closest_point
+                    distance_to_aabb = distance
+                elif distance < distance_to_aabb:
+                    closest_aabb_vector = vector_to_closest_point
+                    distance_to_aabb = distance
+
+        # Avoid the nearest obstacle if any
+        # TODO: Uncomment when intersection notifications are available
+        # if closest_aabb_vector is not None:
+        #     # Lidar points are relative to the car. The "y" dimension, index 1, refers to left or right.
+        #     # The "x" dimension, index 0, refers to the horizontal distance from the car.
+        #     if closest_aabb_vector[1] > 0:
+        #         self.car_controls.steering = -(min(1.0, 0.125 / closest_aabb_vector[0]))
+        #     elif closest_aabb_vector[1] < 0:
+        #         self.car_controls.steering = min(1.0, 0.125 / closest_aabb_vector[0])
 
     def handle_object_recognition(self, res: DetectionResults):
         # Determine the "region" that the object falls into (all in front)
