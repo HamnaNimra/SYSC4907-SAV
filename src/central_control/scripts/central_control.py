@@ -6,10 +6,12 @@ import numpy as np
 import cv2 as cv
 
 from sign_car_recognition.msg import DetectionResult, DetectionResults
-from std_msgs.msg import Float64, String
-from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Float64
 from lane_keep_assist.msg import LaneStatus, LaneLine
 from lane_bound_status import LaneBoundStatus
+from mapping_navigation.msg import PathData
+from road_segment_type import RoadSegmentType
+from road_warning import RoadWarning
 
 from enum import Enum
 import math
@@ -115,7 +117,7 @@ class CentralControl:
     def listen(self):
         rospy.init_node("central_control", anonymous=True)
         rospy.Subscriber("lane_info", LaneStatus, self.handle_lane_data)
-        rospy.Subscriber("steering", Float64, self.handle_steering_data)
+        rospy.Subscriber("navigation", PathData, self.handle_navigation_data)
         rospy.Subscriber("braking", Float64, self.handle_breaking_data)
         rospy.Subscriber("throttling", Float64, self.handle_throttling_data)
         rospy.Subscriber("object_detection", DetectionResults, self.handle_object_recognition)
@@ -216,7 +218,7 @@ class CentralControl:
                     """
                     DON'T LEAVE THIS RUNNING FOR LONG PERIODS OF TIME OR YOU WILL FILL YOUR HARD DRIVE
                     """
-                    cv.imwrite(f'/home/mango/test_imgs/n_{rospy.Time.now()}_s.png', scene)
+                    # cv.imwrite(f'/home/mango/test_imgs/n_{rospy.Time.now()}_s.png', scene)
 
             rate.sleep()
             self.tick += 1
@@ -252,8 +254,15 @@ class CentralControl:
     def handle_speed(self, speed: Float64):
         self.speed = speed
 
-    def handle_steering_data(self, steering_data):
-        self.car_controls.steering = steering_data.data
+    # Results from navigation
+    # Returns the steering angle from pure pursuit
+    # Returns the current road segment type
+    # Returns a warning of a new road segment if one is within 5 meter of the car
+    def handle_navigation_data(self, navigation_data: PathData):
+        print("Obtained navigation data")
+        self.car_controls.steering = navigation_data.steering_angle
+        rospy.loginfo(RoadSegmentType(navigation_data.current_segment))
+        rospy.loginfo(RoadWarning(navigation_data.next_segment))
 
     def handle_breaking_data(self, braking_data):
         pass
