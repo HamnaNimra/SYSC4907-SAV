@@ -440,7 +440,7 @@ def print_converted_path(event):
     path_points = map_model.convert_path(selected_path_id)
 
     # Format that print-out like the coords.txt file that "simple_path" can interpret
-    for x, y in path_points:
+    for x, y, _ in path_points:
         print(f'{x}:{y}')
 
 

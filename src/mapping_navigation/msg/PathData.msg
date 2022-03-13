@@ -1,0 +1,3 @@
+float64 steering_angle
+int8 current_segment
+int8 next_segment

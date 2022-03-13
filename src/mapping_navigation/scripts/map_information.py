@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from enum import Enum
 from typing import Dict, Tuple, List
+from Models import RoadSegmentType
 
 
 class DirEnum(Enum):
@@ -11,9 +12,9 @@ class DirEnum(Enum):
 
 
 class Point:
-    def __init__(self, coordinate: Tuple[float, float], intersection_id: int = None):
+    def __init__(self, coordinate: Tuple[float, float], segment_type: RoadSegmentType = None):
         self.coordinate = coordinate
-        self.intersection_id = intersection_id
+        self.segment_type = segment_type
 
 
 class Lane:

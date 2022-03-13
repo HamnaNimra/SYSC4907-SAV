@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 
-import setup_path 
 import airsim
-
 import rospy
 import tf
 from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped
-
 import time
 
 
 def airpub():
     pub = rospy.Publisher("airsimPose", PoseStamped, queue_size=1)
     rospy.init_node('airpub', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(3) # 10hz
 
     # connect to the AirSim simulator
     host_ip = rospy.get_param('/host_ip')
