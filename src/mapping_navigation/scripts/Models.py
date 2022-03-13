@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from enum import Enum
 from typing import Optional, List, Dict, Tuple
 
@@ -154,8 +156,8 @@ class MapModel:
 
     # Convert path to AirSim coords
     # TODO: include the segment type information somewhere...
-    def convert_path(self, index) -> List[Tuple[float, float]]:
-        airsim_path: List[Tuple[float, float]] = []
+    def convert_path(self, index) -> List[Tuple[float, float, RoadSegmentType]]:
+        airsim_path: List[Tuple[float, float, RoadSegmentType]] = []
         sel_path = self.paths[index]
         # Empty path
         if sel_path.empty():
@@ -163,6 +165,11 @@ class MapModel:
 
         # Iterate through points in the path
         for con, p in sel_path.connections:
-            airsim_path.append(self.convert_point(p))
+            converted_point = self.convert_point(p)
+
+            segment_type = RoadSegmentType.STRAIGHT
+            if con.from_seg_id is not None:
+                segment_type = self.road_segments[con.from_seg_id].seg_type
+            airsim_path.append((converted_point[0], converted_point[1], segment_type))
 
         return airsim_path
