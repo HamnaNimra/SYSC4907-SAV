@@ -107,7 +107,7 @@ class Navigation:
 # Can use either of the path methods by uncommenting one or the other if you want to test with the old path
 if __name__ == "__main__":
 
-    # map = load_from_file(os.path.abspath(os.path.dirname(__file__)) + "/new_coords.txt")
+    # map = load_from_file(os.path.abspath(os.path.dirname(__file__)) + "/new_coords.pickle")
     # # Assuming one path for the moment unless we plan on adding multiple per map in the future
     # created_path = map.convert_path(0)
 
