@@ -6,3 +6,4 @@ float32 ymax
 float32 confidence
 int32 class_num
 string name
+float32 depth

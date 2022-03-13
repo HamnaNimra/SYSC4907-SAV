@@ -53,7 +53,7 @@ class Navigation:
                 self.navigation_pub.publish(nav_msg)
             else:
                 rospy.loginfo('Done route')
-                rospy.signal_shutdown("Done route")
+                # rospy.sigal_shutdown("Done route")
             rate.sleep()
 
     def handle_gps_data(self, position: PoseStamped):
