@@ -2,6 +2,7 @@ import airsim
 import numpy as np
 import open3d as o3d
 import os
+import rospy
 from geometry_msgs.msg import Point32
 
 
@@ -16,7 +17,9 @@ class ClusterDetection:
         if self.running_tests:
             self.box_output_file = open(os.path.abspath(os.path.dirname(__file__)) + "/detected_boxes.txt", "w")
 
-        self.client = airsim.CarClient()
+        host_ip = rospy.get_param('/host_ip')
+
+        self.client = airsim.CarClient(ip=host_ip)
         self.client.confirmConnection()
 
     # Finds the bounding boxes of detected clusters in the point cloud. The returned

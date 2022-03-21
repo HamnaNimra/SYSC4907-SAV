@@ -53,6 +53,7 @@ class Navigation:
                 self.navigation_pub.publish(nav_msg)
             else:
                 rospy.loginfo('Done route')
+                self.navigation_pub.publish(PathData(0, 0, 3))
                 # rospy.sigal_shutdown("Done route")
             rate.sleep()
 

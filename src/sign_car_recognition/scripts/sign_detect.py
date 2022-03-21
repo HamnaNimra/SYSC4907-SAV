@@ -67,13 +67,15 @@ class SignDetector:
             # cv2.rectangle(depth, (x1, y1), (x2, y2), (0, 255, 0), 2)
             # cv2.putText(depth, f'{detect.name}: {detect.depth}', (x2+10, y2), 0, 0.3, (0, 255, 0))
 
-            # cv2.rectangle(img_rgb, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            # cv2.putText(img_rgb, f'{detect.name}: {detect.depth}', (x2+10, y2), 0, 0.3, (0, 255, 0))
+            cv2.rectangle(img_rgb, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(img_rgb, f'{detect.name}: {detect.depth}', (x2+10, y2), 0, 0.3, (0, 255, 0))
 
         # Write debug images to visualize the detections.
         # DONT LEAVE THIS ON FOR LONG PERIODS OF TIME OR YOU WILL FILL YOUR HARD DRIVE WITH PNGS
         # cv2.imwrite(f'/home/mango/test_imgs/n_{rospy.Time.now()}_d.png', depth)
         # cv2.imwrite(f'/home/mango/test_imgs/n_{rospy.Time.now()}_s.png', img_rgb)
+        cv2.imshow("object_detections", img_rgb)
+        cv2.waitKey(1)
 
         rospy.loginfo(res)
         self.pub.publish(res)

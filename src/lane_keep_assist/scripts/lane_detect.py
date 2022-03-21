@@ -249,7 +249,7 @@ def lane_detect(cv_img: np.ndarray, segmented_image: np.ndarray) -> Tuple[List, 
                 coord1, coord2, coord3, coord4 = line
                 cv.line(masked_segmented, (coord1, coord2), (coord3, coord4), (0, 255, 0), 2)
         cv.imshow("masked", masked_segmented)
-        cv.imshow("demo", cv_img)
+        # cv.imshow("demo", cv_img)
         cv.waitKey(1)
     except IndexError as e:
         print(e)
