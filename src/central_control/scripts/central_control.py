@@ -69,6 +69,12 @@ class SensorSystem(Enum):
     LANE_DETECTION = 3
     NAVIGATION = 4
 
+class StopState(Enum):
+    NONE = 0
+    DETECTED = 1
+    STOPPING = 2
+    RESUMING = 3
+
 
 class CentralControl:
     """Central Controller containing logic that processes all the sensor data"""
@@ -86,6 +92,9 @@ class CentralControl:
 
         # Store detected sign and object data. Should refresh every object-detect cycle
         self.sign_data: List[DetectionResult] = []
+        self.stop_state: StopState = StopState.NONE
+        self.stop_cooldown: int = 8
+
         self.object_data: List[DetectionResult] = []
 
         self.avoid: List[DetectionResult] = []
@@ -139,10 +148,15 @@ class CentralControl:
 
             # Iterate through the stored objects and signs (only stop signs for now)
             # to see if there are actions worth taking
-            for sign in self.sign_data:
-                # Heuristic value. Not based on real science
-                if sign.depth <= 15:
-                    self.cc_state.add(CCState.STREET_RULE)
+            if self.stop_state != StopState.RESUMING:
+                for sign in self.sign_data:
+                    # Heuristic values
+                    if sign.depth < 10:
+                        self.stop_state = StopState.STOPPING
+                    elif sign.depth <= 15:
+                        self.cc_state.add(CCState.STREET_RULE)
+                        self.stop_state = StopState.DETECTED
+                        break
 
             # Lane boundary calculations (left, right)
             # NOTE: The lane line detections from LKA are done on a 640 x 360 image
@@ -207,7 +221,28 @@ class CentralControl:
                     cv.putText(scene, 'Go Right', (cx, cy), 0, 0.3, (0, 255, 255))
             elif CCState.STREET_RULE in self.cc_state:
                 # Actions taken when in Street Rule mode
-                pass
+                if self.stop_state == StopState.STOPPING:
+                    self.car_controls.brake = 1
+                    self.car_controls.throttle = 0
+
+                    if self.speed < 0.001:
+                        # When you are stopped, you can start the resuming process
+                        self.stop_state = StopState.RESUMING
+                elif self.stop_state == StopState.RESUMING:
+                    # Stop breaking
+                    self.car_controls.brake = 0
+
+                    # Count down cooldown period
+                    if not self.sign_data:
+                        self.stop_cooldown -= 1
+                    else:
+                        # Reset count
+                        self.stop_cooldown = 8
+
+                    if self.stop_cooldown <= 0:
+                        # Done the stop sign process
+                        self.stop_state = StopState.NONE
+                        self.cc_state.discard(CCState.STREET_RULE)
 
             # Set controls
             if self.ready:
@@ -222,6 +257,8 @@ class CentralControl:
                     DON'T LEAVE THIS RUNNING FOR LONG PERIODS OF TIME OR YOU WILL FILL YOUR HARD DRIVE
                     """
                     # cv.imwrite(f'/home/mango/test_imgs/n_{rospy.Time.now()}_s.png', scene)
+                    cv.imshow("object_avoid_scene", scene)
+                    cv.waitKey(1)
 
             rate.sleep()
             self.tick += 1
@@ -255,7 +292,7 @@ class CentralControl:
             self.lane_status = LaneBoundStatus(lane_data.lane_segmentation_status)
 
     def handle_speed(self, speed: Float64):
-        self.speed = speed
+        self.speed = speed.data
 
     # Results from navigation
     # Returns the steering angle from pure pursuit

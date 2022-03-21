@@ -5,6 +5,7 @@ from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
 import airsim
 
+
 class Lidar:
 
     """
@@ -17,7 +18,9 @@ class Lidar:
     def send_lidar_data(self):
         rospy.init_node('talker', anonymous=True)
 
-        client = airsim.CarClient()
+        host_ip = rospy.get_param('/host_ip')
+
+        client = airsim.CarClient(ip=host_ip)
         client.confirmConnection()
 
         rate = rospy.Rate(30)
@@ -38,6 +41,7 @@ class Lidar:
 
             self.lidar_pub.publish(point_cloud)
             rate.sleep()
+
 
 if __name__ == '__main__':
     lidar = Lidar()
