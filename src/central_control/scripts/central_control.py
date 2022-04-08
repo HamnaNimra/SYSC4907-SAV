@@ -69,6 +69,7 @@ class SensorSystem(Enum):
     LANE_DETECTION = 3
     NAVIGATION = 4
 
+
 class StopState(Enum):
     NONE = 0
     DETECTED = 1
@@ -76,8 +77,14 @@ class StopState(Enum):
     RESUMING = 3
 
 
+ROADWARNINGSPEEDS = {RoadWarning.TURN_AHEAD: 2.5, RoadWarning.INTERSECTION_AHEAD: 2.5,
+                     RoadWarning.STRAIGHT_ROAD_AHEAD: 5}
+ROADSEGMENTSPEEDS = {RoadSegmentType.STRAIGHT: 5, RoadSegmentType.INTERSECTION: 2.5, RoadSegmentType.TURN: 2.5}
+
+
 class CentralControl:
     """Central Controller containing logic that processes all the sensor data"""
+
     def __init__(self):
         host_ip = rospy.get_param('/host_ip')
 
@@ -104,6 +111,10 @@ class CentralControl:
         self.lka_lanes: List[LaneLine] = []
         self.lane_status: LaneBoundStatus = LaneBoundStatus.NO_BOUNDS
         self.lane_debug: LaneStatus = None
+
+        self.target_speed_pub = rospy.Publisher('target_speed', Float64, queue_size=10)
+        self.current_road_segment = RoadSegmentType.STRAIGHT
+        self.next_road_segment = RoadWarning.SAME_AHEAD
 
         # TODO: implement system
         # Each subsystem will have their own formatted recommendation object?
@@ -146,6 +157,12 @@ class CentralControl:
             # Get image to draw on
             scene = self.get_scene_image()
 
+            # Check the current road segment status and define a max speed for them
+            if not self.next_road_segment == RoadWarning.SAME_AHEAD:
+                self.target_speed_pub.publish(ROADWARNINGSPEEDS[self.next_road_segment])
+            else:
+                self.target_speed_pub.publish(ROADSEGMENTSPEEDS[self.current_road_segment])
+
             # Iterate through the stored objects and signs (only stop signs for now)
             # to see if there are actions worth taking
             if self.stop_state != StopState.RESUMING:
@@ -164,19 +181,19 @@ class CentralControl:
             # intercept = y - ax
             if self.lane_status == LaneBoundStatus.ONE_BOUND_LEFT or self.lane_status == LaneBoundStatus.TWO_BOUNDS:
                 lane = self.lka_lanes[0]
-                l_slope = (lane.y1-lane.y2)/(lane.x1-lane.x2)
+                l_slope = (lane.y1 - lane.y2) / (lane.x1 - lane.x2)
                 l_int = (lane.y2 - l_slope * lane.x2)
             else:
                 # No bounds, use hardcoded default
-                l_slope, l_int = -0.19868, 364/1.5
+                l_slope, l_int = -0.19868, 364 / 1.5
 
             if self.lane_status == LaneBoundStatus.ONE_BOUND_RIGHT or self.lane_status == LaneBoundStatus.TWO_BOUNDS:
                 lane = self.lka_lanes[1] if len(self.lka_lanes) == 2 else self.lka_lanes[0]
-                r_slope = (lane.y1-lane.y2)/(lane.x1-lane.x2)
+                r_slope = (lane.y1 - lane.y2) / (lane.x1 - lane.x2)
                 r_int = (lane.y2 - r_slope * lane.x2)
             else:
                 # No bounds, use hardcoded default
-                r_slope, r_int = 0.27991, 137.28205/1.5
+                r_slope, r_int = 0.27991, 137.28205 / 1.5
 
             if not self.object_data:
                 self.cc_state.add(CCState.NORMAL)
@@ -184,7 +201,7 @@ class CentralControl:
                 for obj in self.object_data:
                     is_danger = False
                     # Get x-center, y near the bottom of bounding box
-                    cx, cy = (obj.xmax + obj.xmin)/2, 0.5*(obj.ymax - obj.ymin) + obj.ymin
+                    cx, cy = (obj.xmax + obj.xmin) / 2, 0.5 * (obj.ymax - obj.ymin) + obj.ymin
                     # Check if in danger zone
                     if cy > (l_slope * cx + l_int) and cy > (r_slope * cx + r_int) and obj.depth < 15:
                         is_danger = True
@@ -195,9 +212,10 @@ class CentralControl:
                     # Add bounding boxes for debug image
                     # Colours are (B, G, R)
                     color = (0, 0, 255) if is_danger else (0, 255, 0)
-                    x1, x2, y1, y2 = math.floor(obj.xmin), math.floor(obj.xmax), math.floor(obj.ymin), math.floor(obj.ymax)
+                    x1, x2, y1, y2 = math.floor(obj.xmin), math.floor(obj.xmax), math.floor(obj.ymin), math.floor(
+                        obj.ymax)
                     cv.rectangle(scene, (x1, y1), (x2, y2), color, 2)
-                    cv.putText(scene, f'{obj.name}: {obj.depth}', (x2+10, y2), 0, 0.3, color)
+                    cv.putText(scene, f'{obj.name}: {obj.depth}', (x2 + 10, y2), 0, 0.3, color)
 
             # Change state if there's nothing worth avoiding
             if not self.avoid:
@@ -209,7 +227,7 @@ class CentralControl:
                 self.avoid.sort(key=lambda x: x.depth)
                 # Get closest
                 cur = self.avoid[0]
-                cx, cy = (math.floor((cur.xmax + cur.xmin)/2), math.floor((cur.ymax + cur.ymin)/2))
+                cx, cy = (math.floor((cur.xmax + cur.xmin) / 2), math.floor((cur.ymax + cur.ymin) / 2))
                 # Take action based on where the object approximately is
                 if cx > MID_X:
                     # Right side
@@ -249,8 +267,9 @@ class CentralControl:
                 self.client.setCarControls(self.car_controls)
 
                 # Mark danger zones
-                cv.line(scene, (0, round(l_int)), (round(-l_int/l_slope), 0), (0, 0, 255), 3)  # Left
-                cv.line(scene, (639, round(639*r_slope + r_int)), (round(-r_int/r_slope), 0), (0, 0, 255), 3)  # Right
+                cv.line(scene, (0, round(l_int)), (round(-l_int / l_slope), 0), (0, 0, 255), 3)  # Left
+                cv.line(scene, (639, round(639 * r_slope + r_int)), (round(-r_int / r_slope), 0), (0, 0, 255),
+                        3)  # Right
                 # Write debug image every two images
                 if self.tick % 2 == 0:
                     """
@@ -275,8 +294,8 @@ class CentralControl:
         """
         rospy.loginfo(lane_data)
         self.lane_debug = lane_data
-        grad_av_diff = sum(lane_data.gradient_diff)/len(lane_data.gradient_diff)
-        hls_av_diff = sum(lane_data.hls_diff)/len(lane_data.hls_diff)
+        grad_av_diff = sum(lane_data.gradient_diff) / len(lane_data.gradient_diff)
+        hls_av_diff = sum(lane_data.hls_diff) / len(lane_data.hls_diff)
 
         if grad_av_diff < hls_av_diff < 0.4:
             # Gradient is more reliable
@@ -301,15 +320,15 @@ class CentralControl:
     def handle_navigation_data(self, navigation_data: PathData):
         print("Obtained navigation data")
         self.car_controls.steering = navigation_data.steering_angle
-        rospy.loginfo(RoadSegmentType(navigation_data.current_segment))
-        rospy.loginfo(RoadWarning(navigation_data.next_segment))
+        self.current_road_segment = RoadSegmentType(navigation_data.current_segment)
+        self.next_road_segment = RoadWarning(navigation_data.next_segment)
 
     def handle_breaking_data(self, braking_data):
         pass
 
     def handle_throttling_data(self, throttling_data: Float64):
         self.car_controls.throttle = throttling_data.data
-        
+
     def handle_lidar_detection(self, lidar_data: Float64MultiArray):
         # These are indexes into a bounding box for each of the points that it is composed of
         min_x = 0

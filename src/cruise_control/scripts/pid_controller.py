@@ -40,6 +40,9 @@ class PIDController:
         # with this, make the target speed higher than what is desired internally using self.speedAdjustmentFactor
         exp_factor = -1
         return max(1 - math.exp(exp_factor * inp), 0.0)
+    
+    def update_target_speed(self, new_target_speed: float):
+        self.target_speed = new_target_speed * self.speed_adjustment_factor
 
     def update_pid_output(self, car_speed, delta_time) -> (float, float):
 

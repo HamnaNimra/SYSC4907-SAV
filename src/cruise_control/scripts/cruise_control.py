@@ -34,6 +34,7 @@ class CruiseControl:
         # Define Path data structure
         rospy.Subscriber("pathData", PathData, self.handle_path_data)
         rospy.Subscriber("sensor/speed", Float64, self.handle_speed_data)
+        rospy.Subscriber("target_speed", Float64, self.handle_new_target_speed)
 
         # Node is publisher and subscriber- cannot use spin; the publisher methods will never get called
 
@@ -52,6 +53,9 @@ class CruiseControl:
 
     def handle_path_data(self, data):
         print("Obtained path data")
+
+    def handle_new_target_speed(self, new_target_speed: Float64):
+        self.pidController.update_target_speed(new_target_speed.data)
 
     def handle_speed_data(self, speed: Float64):
         self.currentSpeed = speed.data
