@@ -126,6 +126,7 @@ class CentralControl:
         }
 
         self.tick = 0
+        self.approachingIntersection = False
 
     # Get scene image using Airsim API. For debugging purposes
     def get_scene_image(self):
@@ -323,6 +324,9 @@ class CentralControl:
         self.current_road_segment = RoadSegmentType(navigation_data.current_segment)
         self.next_road_segment = RoadWarning(navigation_data.next_segment)
 
+        self.approachingIntersection = RoadWarning(navigation_data.next_segment) == RoadWarning.INTERSECTION_AHEAD or \
+                                   RoadSegmentType(navigation_data.current_segment) == RoadSegmentType.INTERSECTION
+
     def handle_breaking_data(self, braking_data):
         pass
 
@@ -330,6 +334,13 @@ class CentralControl:
         self.car_controls.throttle = throttling_data.data
 
     def handle_lidar_detection(self, lidar_data: Float64MultiArray):
+
+        # Current implementation of lidar obstacle avoidance overrides navigation steering suggestion.
+        # This can cause a crash if the car is at an intersection, where it can prevent turning or cause an opposite
+        # turn than what is required depending on nearby obstacles
+        if self.approachingIntersection:
+            return
+
         # These are indexes into a bounding box for each of the points that it is composed of
         min_x = 0
         min_y = 1
@@ -375,14 +386,13 @@ class CentralControl:
                     distance_to_aabb = distance
 
         # Avoid the nearest obstacle if any
-        # TODO: Uncomment when intersection notifications are available
-        # if closest_aabb_vector is not None:
-        #     # Lidar points are relative to the car. The "y" dimension, index 1, refers to left or right.
-        #     # The "x" dimension, index 0, refers to the horizontal distance from the car.
-        #     if closest_aabb_vector[1] > 0:
-        #         self.car_controls.steering = -(min(1.0, 0.125 / closest_aabb_vector[0]))
-        #     elif closest_aabb_vector[1] < 0:
-        #         self.car_controls.steering = min(1.0, 0.125 / closest_aabb_vector[0])
+        if closest_aabb_vector is not None:
+            # Lidar points are relative to the car. The "y" dimension, index 1, refers to left or right.
+            # The "x" dimension, index 0, refers to the horizontal distance from the car.
+            if closest_aabb_vector[1] > 0:
+                self.car_controls.steering = -(min(1.0, 0.125 / closest_aabb_vector[0]))
+            elif closest_aabb_vector[1] < 0:
+                self.car_controls.steering = min(1.0, 0.125 / closest_aabb_vector[0])
 
     def handle_object_recognition(self, res: DetectionResults):
         # Determine the "region" that the object falls into (all in front)
