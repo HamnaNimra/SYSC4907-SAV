@@ -63,6 +63,10 @@ class CruiseControl:
     def publish_results(self):
 
         delta_time = time.time() - self.lastTime
+
+        if delta_time <= 0.0:
+            return
+
         self.lastTime += delta_time
         (throttle_action, throttle_value) = self.pidController.update_pid_output(self.currentSpeed, delta_time)
 
